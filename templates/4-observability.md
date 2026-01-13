@@ -21,6 +21,8 @@ Design everything from the perspective of a future investigator:
 
 ### Metrics and Alerts
 
+> **MUST:** All services MUST expose a `/metrics` endpoint in Prometheus format. This is non-negotiable for production deployments.
+
 Design your project so that metrics can be collected by Prometheus and alerts configured in Alertmanager.
 
 Ask yourself:
@@ -34,9 +36,16 @@ Design everything from the perspective of a future investigator:
 - For every critical path: Expose latency, error rate, and throughput metrics
 - For every dependency: Track availability and response times
 
-**Practical guidelines:**
+**Prometheus metrics requirements:**
 
-- Expose metrics in Prometheus format
+- Expose a `/metrics` endpoint that Prometheus can scrape
+- Use appropriate metric types: counters for totals, gauges for current values, histograms for distributions
 - Follow naming conventions (e.g., `http_requests_total`, `request_duration_seconds`)
+- Include standard labels: `service`, `environment`, `instance`
+- Expose application-specific business metrics alongside technical metrics
+
+**Alerting requirements:**
+
 - Set up alerts for anomalies, not just failures
 - Include runbook links in alert annotations
+- Define severity levels (critical, warning, info) consistently

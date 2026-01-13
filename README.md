@@ -94,6 +94,22 @@ Features:
 | `techwriter` | Documentation, API docs, user guides |
 | `reviewer` | Code review, documentation review, configuration review |
 
+### Customizing Agents
+
+The agents included in this plugin are **general-purpose templates**. For best results, customize them for your specific project.
+
+**Agent files location:** `agents/*.md` in the plugin directory
+
+**What to customize:**
+
+- **Project-specific libraries** - Add your actual frameworks (e.g., replace generic "Django, Flask, FastAPI" with your specific stack)
+- **Code conventions** - Add your naming conventions, file structure patterns, import ordering rules
+- **Architecture patterns** - Document your specific patterns (repositories, services, DTOs, etc.)
+- **Testing requirements** - Specify your test frameworks, coverage requirements, mocking approaches
+- **Domain knowledge** - Add business domain context that agents should understand
+
+**Example:** If your Python project uses FastAPI + SQLAlchemy + Pydantic, edit `agents/dev-python.md` to reference these specifically, including your project's patterns for models, schemas, and dependency injection.
+
 ## Templates
 
 Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
