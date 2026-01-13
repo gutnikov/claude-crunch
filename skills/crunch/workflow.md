@@ -6,6 +6,85 @@ Detailed instructions for each state transition. Reference CLAUDE.md for:
 - TDD requirements (TDD section)
 - Observability requirements (Observability section)
 
+---
+
+## Input Modes
+
+The crunch skill supports multiple invocation modes for flexibility.
+
+### Mode 1: Existing Issue (Interactive)
+
+```
+/crunch 5
+/crunch #5
+```
+
+- Fetch issue from CI MCP
+- Display summary to user
+- Ask target state interactively via `AskUserQuestion`
+- Execute workflow transitions
+
+### Mode 2: Existing Issue (Direct)
+
+```
+/crunch -i 5 -t ready
+/crunch --issue 5 --target validation
+```
+
+- Fetch issue from CI MCP
+- Use provided target state (skip interactive ask)
+- Validate transition is allowed
+- Execute workflow transitions
+
+### Mode 3: New Issue (Interactive)
+
+```
+/crunch "Add dark mode toggle"
+```
+
+- Create new issue via CI MCP with text as title/body
+- Run INPUT negotiation (2-3 turns)
+- Ask target state after negotiation
+- Execute workflow transitions
+
+### Mode 4: New Issue (Non-Interactive)
+
+```
+/crunch --input "Fix null pointer in handler" --type bug
+/crunch --input "Add metrics endpoint" --type feature -t ready
+```
+
+- Create new issue via CI MCP
+- Skip INPUT negotiation entirely
+- Use provided `--type` or infer from keywords
+- Transition directly to BACKLOG (or further if `-t` provided)
+
+### Parameter Parsing
+
+```
+Arguments:
+  [number]          Issue number (e.g., 5, #5)
+  "text"            New issue description (interactive mode)
+
+Options:
+  -i, --issue NUM   Issue number to process
+  -t, --target ST   Target state (skips interactive ask)
+  --input TEXT      New issue text (non-interactive mode)
+  --type TYPE       Issue type: bug | feature
+```
+
+### Type Inference
+
+When `--type` is not provided with `--input`, infer from keywords:
+
+**Bug indicators**: fix, bug, crash, error, broken, issue, problem, fails, null, exception, undefined
+
+**Feature indicators**: add, implement, create, new, feature, support, enable, introduce, enhance
+
+If ambiguous, default to `feature`.
+
+---
+
 ## Git Branch Lifecycle
 
 ```
@@ -43,7 +122,13 @@ DONE (after PR merged)
 
 ## INPUT Phase (no state label)
 
-**Purpose**: Negotiate with requestor to clarify raw input before it becomes a proper backlog item.
+**Purpose**: Process raw input before it becomes a proper backlog item.
+
+This phase has two paths depending on invocation mode.
+
+### Interactive Path (default)
+
+When invoked with bare text or existing issue without state label:
 
 **This is a conversation phase** - do 2-3 turns of negotiation to:
 1. Understand what the requestor actually wants
@@ -51,7 +136,7 @@ DONE (after PR merged)
 3. Identify missing information
 4. Confirm understanding
 
-### Negotiation Process
+#### Negotiation Process
 
 **Turn 1: Initial Understanding**
 - Read the raw input
@@ -71,7 +156,7 @@ DONE (after PR merged)
 - Confirm with requestor
 - Identify issue type (bug or feature)
 
-### Actions on Completion
+#### Actions on Completion
 
 1. Update issue body with clarified requirements
 2. Add type label (`type:bug` or `type:feature`)
@@ -95,6 +180,37 @@ Update issue body:
 
 **Status**: Ready for Backlog
 ```
+
+### Non-Interactive Path (`--input`)
+
+When invoked with `--input` flag, skip negotiation entirely:
+
+1. **Use input text as-is** for issue body
+2. **Determine type**:
+   - Use `--type` if provided
+   - Otherwise infer from keywords (see Input Modes section)
+3. **Create issue** via CI MCP with:
+   - Title: first line or first 80 chars of input
+   - Body: full input text
+   - Labels: inferred/provided type
+4. **Immediately transition to BACKLOG**:
+   - Add `state:backlog` label
+   - Skip negotiation turns
+
+Update issue body (non-interactive):
+```markdown
+## {Bug|Feature}: {title}
+
+### Description
+{input text as provided}
+
+### Source
+Created via non-interactive crunch invocation.
+
+**Status**: Ready for Backlog
+```
+
+If `-t` target is also provided, continue transitioning toward target state.
 
 ---
 
@@ -677,3 +793,50 @@ Code Review:
 
 **Status**: Ready to Merge
 ```
+
+---
+
+## CI MCP Operations
+
+### Issue Creation (for new issues)
+
+When creating a new issue via `--input` or quoted text:
+
+| Platform | MCP Operation | Example |
+|----------|---------------|---------|
+| GitHub | `create_issue` | `mcp__github__create_issue` |
+| GitLab | `create_issue` | `mcp__gitlab__create_issue` |
+| Gitea | `create_issue` | `mcp__gitea__create_issue` |
+
+**Parameters**:
+- `title`: First line of input (or first 80 chars)
+- `body`: Full input text formatted per template
+- `labels`: Type label if known (e.g., `type:bug`, `type:feature`)
+
+### Subagent Invocation Patterns
+
+When this skill is invoked by other agents:
+
+**From review skill** (after code review):
+```
+/crunch -i {issue_number} -t validation
+```
+
+**Creating follow-up issues**:
+```
+/crunch --input "Follow-up from #{parent}: {description}" --type feature -t ready
+```
+
+**Hotfix pipeline**:
+```
+/crunch --input "Hotfix: {description}" --type bug -t implementing
+```
+
+### Non-Interactive Checklist
+
+Before running in non-interactive mode, ensure:
+- [ ] Issue number (`-i`) or input text (`--input`) provided
+- [ ] Target state (`-t`) provided (skips interactive ask)
+- [ ] Type (`--type`) provided or inferable from text
+- [ ] CI MCP server is available (check CLAUDE.md)
+- [ ] Required labels exist in repository
