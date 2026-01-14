@@ -1616,15 +1616,39 @@ Enhanced selection:
 
 ## CI MCP Operations
 
+### Platform Detection
+
+Read CLAUDE.md to determine CI platform:
+- GitHub/GitLab/Gitea → Use corresponding MCP commands
+- Filebase → Use `/ci-filebase` skill commands
+
 ### Issue Creation (for new issues)
 
 When creating a new issue via `--input` or quoted text:
 
-| Platform | MCP Operation | Example |
-|----------|---------------|---------|
-| GitHub | `create_issue` | `mcp__github__create_issue` |
-| GitLab | `create_issue` | `mcp__gitlab__create_issue` |
-| Gitea | `create_issue` | `mcp__gitea__create_issue` |
+| Platform | Operation | Command |
+|----------|-----------|---------|
+| GitHub | MCP | `mcp__github__create_issue(owner, repo, title, body, labels)` |
+| GitLab | MCP | `mcp__gitlab__create_issue(project_id, title, description, labels)` |
+| Gitea | MCP | `mcp__gitea__create_issue(owner, repo, title, body)` |
+| Filebase | Skill | `/ci-filebase issue create "{title}" --body "{body}" --labels {labels}` |
+
+### Issue Operations (get, update, label, close)
+
+| Operation | GitHub MCP | GitLab MCP | Gitea MCP | Filebase |
+|-----------|------------|------------|-----------|----------|
+| Get issue | `mcp__github__get_issue` | `mcp__gitlab__get_issue` | `mcp__gitea__get_issue` | `/ci-filebase issue get {id}` |
+| Update body | `mcp__github__update_issue` | `mcp__gitlab__update_issue` | `mcp__gitea__update_issue` | `/ci-filebase issue update {id} --body "..."` |
+| Set labels | `mcp__github__set_issue_labels` | `mcp__gitlab__update_issue` | `mcp__gitea__replace_issue_labels` | `/ci-filebase issue label {id} {labels}` |
+| Close issue | `mcp__github__update_issue` | `mcp__gitlab__close_issue` | `mcp__gitea__close_issue` | `/ci-filebase issue close {id}` |
+| Add comment | `mcp__github__create_issue_comment` | `mcp__gitlab__create_issue_note` | `mcp__gitea__create_issue_comment` | `/ci-filebase issue comment {id} "{text}"` |
+
+### PR Operations
+
+| Operation | GitHub MCP | GitLab MCP | Gitea MCP | Filebase |
+|-----------|------------|------------|-----------|----------|
+| Create PR | `mcp__github__create_pull_request` | `mcp__gitlab__create_merge_request` | `mcp__gitea__create_pull_request` | `/ci-filebase pr create --title "..." --head "..." --base "..."` |
+| Merge PR | `mcp__github__merge_pull_request` | `mcp__gitlab__accept_merge_request` | `mcp__gitea__merge_pull_request` | `/ci-filebase pr merge {id}` |
 
 **Parameters**:
 - `title`: First line of input (or first 80 chars)
@@ -1656,5 +1680,7 @@ Before running in non-interactive mode, ensure:
 - [ ] Issue number (`-i`) or input text (`--input`) provided
 - [ ] Target state (`-t`) provided (skips interactive ask)
 - [ ] Type (`--type`) provided or inferable from text
-- [ ] CI MCP server is available (check CLAUDE.md)
-- [ ] Required labels exist in repository
+- [ ] CI platform is available:
+  - MCP-based (GitHub/GitLab/Gitea): CI MCP server configured
+  - Filebase: `.claude/ci-filebase/` directory initialized
+- [ ] Required labels exist (in CI platform or `labels.json` for Filebase)

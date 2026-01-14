@@ -149,6 +149,7 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 | `6-ci-github.md` | GitHub MCP reference |
 | `6-ci-gitlab.md` | GitLab MCP reference |
 | `6-ci-gitea.md` | Gitea MCP reference |
+| `6-ci-filebase.md` | File-based CI reference (no MCP required) |
 | `7-configuration.md` | Environment variables and feature flags |
 | `8-deployment.md` | Staging and production deployment |
 | `99-setup-checklist.md` | Setup verification checklist |
@@ -173,7 +174,7 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 - Claude Code CLI
 - For full functionality:
   - Vault MCP server (secret management)
-  - CI MCP server (GitHub/GitLab/Gitea)
+  - CI MCP server (GitHub/GitLab/Gitea) OR Filebase for local-only workflows
 
 ## Plugin Structure
 
@@ -195,7 +196,8 @@ claude-crunch/
 │   ├── learn/          # Knowledge capture skill
 │   ├── knowledge/      # Knowledge query skill
 │   ├── test-analyze/   # Test quality analysis skill
-│   └── analyze/        # Pattern analysis skill
+│   ├── analyze/        # Pattern analysis skill
+│   └── ci-filebase/    # File-based CI for local workflows
 └── templates/          # CLAUDE.md section and orchestration templates
 ```
 

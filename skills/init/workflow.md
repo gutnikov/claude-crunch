@@ -253,22 +253,29 @@ errors: []
    - GitHub (GitHub Actions)
    - GitLab (GitLab CI)
    - Gitea (Gitea Actions)
+   - Filebase (Local files - no external CI)
    ```
 
-2. **Repository Owner**
+2. **Repository Owner** (skip for Filebase)
    ```
-   AskUserQuestion: "What is your repository owner/organization?"
+   IF platform != "filebase":
+     AskUserQuestion: "What is your repository owner/organization?"
 
-   Header: "Repo owner"
-   Example: myorg, username, company-name
+     Header: "Repo owner"
+     Example: myorg, username, company-name
+   ELSE:
+     owner = null (not needed for filebase)
    ```
 
-3. **Repository Name**
+3. **Repository Name** (skip for Filebase)
    ```
-   AskUserQuestion: "What is your repository name?"
+   IF platform != "filebase":
+     AskUserQuestion: "What is your repository name?"
 
-   Header: "Repo name"
-   Example: my-project, backend-api
+     Header: "Repo name"
+     Example: my-project, backend-api
+   ELSE:
+     repo = null (not needed for filebase)
    ```
 
 4. **Linting Tools** (multi-select)
@@ -742,7 +749,7 @@ IF fail:
 
 ## Phase 7: CI MCP Setup
 
-**Purpose**: Install and configure CI platform MCP server
+**Purpose**: Install and configure CI platform MCP server (or initialize Filebase)
 
 ### Determine MCP Server
 
@@ -750,19 +757,38 @@ Based on Phase 2 platform selection:
 - GitHub -> `github-mcp-server`
 - GitLab -> GitLab Duo MCP (embedded)
 - Gitea -> `gitea-mcp`
+- Filebase -> No MCP needed, use `/ci-filebase init`
 
-### Check Existing
+### Handle Filebase Platform
 
 ```
-Try appropriate get_repo command:
-- GitHub: mcp__github__get_repo with owner and repo
-- GitLab: mcp__gitlab__get_project
-- Gitea: mcp__gitea__get_repo
+IF platform == "filebase":
+  Show: "Filebase uses local file storage instead of MCP servers."
 
-IF success:
-  Show: "{Platform} MCP is already installed and working!"
+  Run /ci-filebase init to create directory structure:
+  - Creates .claude/ci-filebase/issues/
+  - Creates .claude/ci-filebase/prs/
+  - Creates .claude/ci-filebase/labels.json
+  - Creates .claude/ci-filebase/counter.json
+
+  Show: "Filebase initialized at .claude/ci-filebase/"
   Mark phase as completed
   Skip to Phase 8
+```
+
+### Check Existing (for MCP-based platforms)
+
+```
+IF platform != "filebase":
+  Try appropriate get_repo command:
+  - GitHub: mcp__github__get_repo with owner and repo
+  - GitLab: mcp__gitlab__get_project
+  - Gitea: mcp__gitea__get_repo
+
+  IF success:
+    Show: "{Platform} MCP is already installed and working!"
+    Mark phase as completed
+    Skip to Phase 8
 ```
 
 ### Guide Installation
@@ -1335,9 +1361,15 @@ This will:
      PARTIAL (list pending secrets)
    ```
 
-3. **CI MCP installed and working**
+3. **CI MCP installed and working** (or Filebase initialized)
    ```
-   IF phases.7_ci_mcp.data.tested == true:
+   IF platform == "filebase":
+     Check .claude/ci-filebase/ directory exists
+     Check .claude/ci-filebase/labels.json exists
+     Check .claude/ci-filebase/counter.json exists
+     IF all exist: PASS
+     ELSE: FAIL (run /ci-filebase init)
+   ELSE IF phases.7_ci_mcp.data.tested == true:
      Try CI command
      IF success: PASS
      ELSE: FAIL
@@ -1353,6 +1385,7 @@ This will:
    - GitHub: .github/workflows/*.yml exists
    - GitLab: .gitlab-ci.yml exists
    - Gitea: .gitea/workflows/*.yml exists
+   - Filebase: .claude/ci-filebase/ directory exists (already checked above)
 
    IF exists: PASS
    ELSE: FAIL (or PENDING if issue is in progress)
@@ -1544,6 +1577,7 @@ All templates are in the plugin's `templates/` directory (relative to plugin roo
 | `6-ci-github.md` | GitHub reference | Include if platform=github |
 | `6-ci-gitlab.md` | GitLab reference | Include if platform=gitlab |
 | `6-ci-gitea.md` | Gitea reference | Include if platform=gitea |
+| `6-ci-filebase.md` | Filebase reference | Include if platform=filebase |
 | `7-configuration.md` | Config management | Fill in env vars and feature flags |
 | `8-deployment.md` | Deployment procedures | Fill in staging/prod details |
 | `99-setup-checklist.md` | Setup verification | Update with [x] marks |

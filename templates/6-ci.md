@@ -7,11 +7,12 @@
 <!--
 TEMPLATE: Keep only the platform used by your project. Remove this comment after configuration.
 
-| Platform | Status   | Config File          | MCP Server                                                                                              |
-| -------- | -------- | -------------------- | ------------------------------------------------------------------------------------------------------- |
-| GitHub   | {active} | `.github/workflows/` | [github/github-mcp-server](https://github.com/github/github-mcp-server)                                 |
-| GitLab   | {active} | `.gitlab-ci.yml`     | [GitLab Duo MCP](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/) (embedded) |
-| Gitea    | {active} | `.gitea/workflows/`  | [MushroomFleet/gitea-mcp](https://github.com/MushroomFleet/gitea-mcp)                                   |
+| Platform | Status   | Config File            | MCP Server / Storage                                                                                    |
+| -------- | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| GitHub   | {active} | `.github/workflows/`   | [github/github-mcp-server](https://github.com/github/github-mcp-server)                                 |
+| GitLab   | {active} | `.gitlab-ci.yml`       | [GitLab Duo MCP](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/) (embedded) |
+| Gitea    | {active} | `.gitea/workflows/`    | [MushroomFleet/gitea-mcp](https://github.com/MushroomFleet/gitea-mcp)                                   |
+| Filebase | {active} | `.claude/ci-filebase/` | Local file storage (no MCP required)                                                                    |
 -->
 
 ### Environments

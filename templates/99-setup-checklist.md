@@ -3,7 +3,7 @@
 ### Project Configuration
 
 - [ ] Project name and description confirmed
-- [ ] CI platform selected (GitHub/GitLab/Gitea)
+- [ ] CI platform selected (GitHub/GitLab/Gitea/Filebase)
 - [ ] Configuration files created (env vars, feature flags)
 - [ ] Deployment URLs configured (staging/production)
 - [ ] CLAUDE.md generated from templates
@@ -16,12 +16,27 @@
 
 ### CI/CD Integration
 
+> **Note:** Choose either MCP-based CI (GitHub/GitLab/Gitea) OR Filebase CI below.
+
+#### MCP-based CI (GitHub/GitLab/Gitea)
+
 - [ ] CI MCP installed and working
 - [ ] CI MCP health check passed
 - [ ] CI config ready
 - [ ] Labels created in CI platform
 - [ ] Branch protection rules configured
 - [ ] CI pipeline tested successfully
+
+#### Filebase CI (Local files)
+
+> **Note:** Use Filebase for projects without external CI platform access. Issues and PRs are stored locally in `.claude/ci-filebase/`.
+
+- [ ] Filebase initialized (`/ci-filebase init`)
+- [ ] `.claude/ci-filebase/` directory created
+- [ ] `labels.json` created with default workflow labels
+- [ ] `counter.json` initialized
+- [ ] Test issue created (`/ci-filebase issue create "Test"`)
+- [ ] Test issue labels work (`/ci-filebase issue label 1 type:feature`)
 
 ### Observability Infrastructure
 
@@ -215,10 +230,19 @@ Combined `.claude/mcp.json` for all observability MCPs:
 
 ## Minimum Viable Setup
 
-For teams without existing observability infrastructure, the minimum setup is:
+For teams without existing infrastructure, the minimum setup is:
+
+### Option A: With External CI (GitHub/GitLab/Gitea)
 
 1. **CI MCP only** - Issues, PRs, labels work
 2. **Skip observability MCPs** - `/patrol --code` and `/patrol --deps` still work
 3. **Manual validation** - Skip continuous monitoring in VALIDATION phase
+
+### Option B: Fully Local (Filebase)
+
+1. **Filebase CI** - Local issue/PR tracking via `/ci-filebase`
+2. **No MCP required** - Everything stored in `.claude/ci-filebase/`
+3. **Skip observability** - Manual validation only
+4. **Ideal for** - Air-gapped environments, rapid prototyping, single-developer projects
 
 Full observability is recommended for production projects but not required to use the core `/crunch` workflow.
