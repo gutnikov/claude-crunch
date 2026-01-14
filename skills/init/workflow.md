@@ -137,6 +137,11 @@ phases:
       installed: false
       configured: false
       tested: false
+      # Filebase-specific (when platform == "filebase")
+      filebase_initialized: false
+      docker_ci_enabled: false
+      docker_ci_initialized: false
+      docker_ci_tested: false
 
   8_observability_mcp:
     status: pending
@@ -890,8 +895,144 @@ IF platform == "filebase":
   - Creates .claude/ci-filebase/counter.json
 
   Show: "Filebase initialized at .claude/ci-filebase/"
+  Mark filebase_initialized = true
+
+  # Ask about Docker CI setup
+  Proceed to "Docker CI Setup for Filebase" section below
+```
+
+### Docker CI Setup for Filebase
+
+When using Filebase, offer to set up local Docker CI for VALIDATION phase support.
+
+```
+AskUserQuestion: "Do you want to set up local Docker CI/CD?"
+
+Header: "Docker CI"
+Options:
+- Yes, set up Docker CI (Recommended for VALIDATION support)
+- No, I'll validate manually
+```
+
+#### If User Selects Docker CI
+
+```
+IF user selects "Yes":
+  # Check Docker prerequisites
+  Show: "Checking Docker installation..."
+
+  Run: docker --version
+  IF fails:
+    Show: "Docker not found. Please install Docker first."
+    Show link: https://docs.docker.com/get-docker/
+    AskUserQuestion: "Docker status?"
+    Options:
+    - I've installed Docker, continue
+    - Skip Docker CI for now
+
+  Run: docker-compose --version OR docker compose version
+  IF fails:
+    Show: "Docker Compose not found. Please install Docker Compose."
+    AskUserQuestion: "Docker Compose status?"
+    Options:
+    - I've installed Docker Compose, continue
+    - Skip Docker CI for now
+
+  # Initialize Docker CI
+  Run /ci-filebase docker init:
+  - Detects project type (Node.js, Python, Go, Rust, etc.)
+  - Creates .claude/ci-filebase/docker/docker-compose.staging.yaml
+  - Creates .claude/ci-filebase/docker/Dockerfile.staging (if needed)
+  - Creates .claude/ci-filebase/docker/.env.staging
+  - Creates .claude/ci-filebase/docker/ci-config.json
+
+  Show:
+    "Docker CI initialized!
+
+    Detected project type: {project_type}
+    CI commands configured:
+    - Lint: {lint_command}
+    - Test: {test_command}
+    - Build: {build_command}
+
+    Files created:
+    - .claude/ci-filebase/docker/docker-compose.staging.yaml
+    - .claude/ci-filebase/docker/ci-config.json"
+
+  # Test CI pipeline
+  AskUserQuestion: "Would you like to test the CI pipeline now?"
+  Options:
+  - Yes, run test pipeline (Recommended)
+  - Skip test
+
+  IF user selects "Yes":
+    Run /ci-filebase docker ci
+    IF success:
+      Show: "CI pipeline test passed!"
+      Mark docker_ci_tested = true
+    ELSE:
+      Show: "CI pipeline failed. You may need to adjust ci-config.json."
+      Show error output
+      Mark docker_ci_tested = false
+
+  # Test staging deployment (optional)
+  AskUserQuestion: "Would you like to test staging deployment?"
+  Options:
+  - Yes, deploy to local staging
+  - Skip (I'll test later)
+
+  IF user selects "Yes":
+    Run /ci-filebase docker deploy staging
+    IF success:
+      Show:
+        "Staging deployment successful!
+         App URL: http://localhost:{port}
+
+         Cleaning up..."
+      Run /ci-filebase docker stop
+      Show: "Staging stopped. Docker CI setup complete!"
+    ELSE:
+      Show: "Staging deployment failed. Check docker-compose configuration."
+      Show error output
+
+  Mark docker_ci_enabled = true
+  Mark docker_ci_initialized = true
+```
+
+#### If User Skips Docker CI
+
+```
+IF user selects "No" or skips Docker setup:
+  Show:
+    "Docker CI skipped.
+
+    Note: Without Docker CI, the VALIDATION phase will require manual testing.
+    You can set up Docker CI later by running:
+      /ci-filebase docker init
+
+    Proceeding with basic Filebase setup."
+
+  Mark docker_ci_enabled = false
   Mark phase as completed
   Skip to Phase 8
+```
+
+#### Docker CI Summary
+
+```
+Show:
+  "Filebase CI Setup Summary:
+   - Issue tracking: .claude/ci-filebase/ ✓
+   - Docker CI: {Enabled / Disabled}
+   {IF docker_ci_enabled}
+   - CI pipeline: {Tested / Not tested}
+   - Staging: Local Docker
+   {ELSE}
+   - VALIDATION: Manual testing required
+   {ENDIF}"
+
+Mark phase as completed
+Skip to Phase 8
 ```
 
 ### Check Existing (for MCP-based platforms)
@@ -1568,7 +1709,26 @@ This will:
      FAIL
    ```
 
-4. **CI config ready**
+4. **Docker CI configured** (Filebase only)
+   ```
+   IF platform == "filebase":
+     IF phases.7_ci_mcp.data.docker_ci_enabled == true:
+       Check .claude/ci-filebase/docker/ directory exists
+       Check .claude/ci-filebase/docker/docker-compose.staging.yaml exists
+       Check .claude/ci-filebase/docker/ci-config.json exists
+       IF all exist:
+         # Optionally verify Docker is running
+         Run: docker ps
+         IF success: PASS
+         ELSE: WARN (Docker not running, but config exists)
+       ELSE: FAIL (run /ci-filebase docker init)
+     ELSE:
+       SKIP (note: Docker CI not enabled, manual VALIDATION required)
+   ELSE:
+     SKIP (not applicable for MCP-based CI)
+   ```
+
+5. **CI config ready**
    ```
    Check for workflow file:
    - GitHub: .github/workflows/*.yml exists
@@ -1580,7 +1740,7 @@ This will:
    ELSE: FAIL (or PENDING if issue is in progress)
    ```
 
-5. **Observability MCPs configured**
+6. **Observability MCPs configured**
    ```
    IF phases.8_observability_mcp.status == skipped:
      SKIP (note: /patrol --logs and --metrics unavailable)
@@ -1609,7 +1769,7 @@ This will:
        ELSE: SKIP
    ```
 
-6. **Setup CI issue created**
+7. **Setup CI issue created**
    ```
    IF phases.10_setup_ci_issue.data.issue_number exists:
      Verify issue exists via CI MCP
@@ -1621,7 +1781,7 @@ This will:
      FAIL
    ```
 
-7. **Setup CI issue crunched to ready-to-merge**
+8. **Setup CI issue crunched to ready-to-merge**
    ```
    IF phases.10_setup_ci_issue.data.final_state in [ready-to-merge, done]:
      PASS
@@ -1633,6 +1793,7 @@ This will:
 
 Read CLAUDE.md, find "## Setup Checklist" section, update with results:
 
+**For MCP-based CI (GitHub/GitLab/Gitea):**
 ```markdown
 ## Setup Checklist
 
@@ -1652,6 +1813,28 @@ Read CLAUDE.md, find "## Setup Checklist" section, update with results:
     Verified: Issue #1 has label state:ready-to-merge
 ```
 
+**For Filebase CI:**
+```markdown
+## Setup Checklist
+
+[x] SOPS and age installed
+    Verified: sops --version, age --version work
+[x] All required secrets configured
+    Verified: secrets/staging.yaml and secrets/production.yaml exist
+[x] Filebase CI initialized
+    Verified: .claude/ci-filebase/ directory exists
+[x] Docker CI configured
+    Verified: .claude/ci-filebase/docker/ directory exists
+[x] Docker CI pipeline tested
+    Verified: /ci-filebase docker ci passed
+[x] Local staging works
+    Verified: /ci-filebase docker deploy staging succeeded
+[x] Setup CI issue created
+    Verified: Issue #1 exists in .claude/ci-filebase/issues/1.json
+[x] Setup CI issue crunched to ready-to-merge
+    Verified: Issue #1 has label state:ready-to-merge
+```
+
 Use `[x]` for passed, `[ ]` for failed/pending, and add verification notes.
 
 ### Report Summary
@@ -1662,8 +1845,20 @@ Show:
 
   Summary:
   - CLAUDE.md: Created with full configuration
-  - Vault MCP: {Working / Skipped / Failed}
+  - Secret Management: {Vault / SOPS / Skipped}
+  - CI Platform: {GitHub / GitLab / Gitea / Filebase}
+  {IF platform == "filebase"}
+  - Filebase CI: Initialized
+  - Docker CI: {Enabled / Disabled}
+    {IF docker_ci_enabled}
+    - CI Pipeline: {Tested / Not tested}
+    - Staging: Local Docker
+    {ELSE}
+    - VALIDATION: Manual testing required
+    {ENDIF}
+  {ELSE}
   - CI MCP: {Working / Skipped / Failed}
+  {ENDIF}
   - Secrets: {N} configured, {M} pending
   - Setup Issue: #{number} - {state}
 
@@ -1690,6 +1885,7 @@ Show:
          secrets_configured: true/false
          ci_mcp_working: true/false
          ci_config_ready: true/false
+         docker_ci_working: true/false/skip  # Filebase only
          observability_configured: true/false
          prometheus_working: true/false
          loki_working: true/false
