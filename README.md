@@ -54,13 +54,15 @@ Commands are namespaced with `claude-crunch:` when installed as a plugin.
 
 Interactive wizard that:
 1. Gathers project information (name, description)
-2. Configures CI platform (GitHub/GitLab/Gitea)
+2. Configures CI platform (GitHub/GitLab/Gitea/Filebase)
 3. Sets up environment variables and feature flags
-4. Configures deployment environments
-5. Generates `CLAUDE.md` from templates
-6. Guides Vault and CI MCP installation
-7. Creates and processes a setup issue
-8. Verifies the setup checklist
+4. Selects secret management approach (Vault or SOPS)
+5. Configures deployment environments
+6. Generates `CLAUDE.md` from templates
+7. Sets up secret management (Vault MCP or SOPS+age)
+8. Configures CI (MCP servers or Filebase with Docker)
+9. Creates and processes a setup issue
+10. Verifies the setup checklist
 
 Progress is saved to `.claude/init-progress.txt` - resume anytime by running `/init` again.
 
@@ -81,6 +83,55 @@ Features:
 - TDD enforcement
 - Automatic branch creation and PR workflow
 - Issue body updates with progress tracking
+
+### File-based CI with Docker
+
+For projects without access to hosted CI platforms, use Filebase with local Docker:
+
+```
+/claude-crunch:ci-filebase init
+/claude-crunch:ci-filebase docker init
+```
+
+This provides:
+- **Local issue/PR tracking** - JSON files in `.claude/ci-filebase/`
+- **CI pipeline simulation** - Run lint, test, build locally
+- **Local Docker staging** - Deploy and validate in containers
+- **Full VALIDATION support** - Complete workflow without external services
+
+#### Quick Start (Filebase + Docker)
+
+```bash
+# Initialize file-based CI
+/ci-filebase init
+
+# Set up Docker CI (requires Docker installed)
+/ci-filebase docker init
+
+# Run CI pipeline locally
+/ci-filebase docker ci
+
+# Deploy to local staging
+/ci-filebase docker deploy staging
+
+# Check staging health
+/ci-filebase docker health
+
+# Stop staging
+/ci-filebase docker stop
+```
+
+#### Docker CI Commands
+
+| Command | Description |
+|---------|-------------|
+| `docker init` | Initialize Docker CI infrastructure |
+| `docker ci` | Run local CI pipeline (lint, test, build) |
+| `docker deploy staging` | Deploy to local Docker staging |
+| `docker logs` | View staging container logs |
+| `docker health` | Check staging health status |
+| `docker stop` | Stop local staging environment |
+| `docker rebuild` | Rebuild and restart staging |
 
 ## Agents
 
@@ -176,8 +227,9 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 
 - Claude Code CLI
 - For full functionality:
-  - Vault MCP server (secret management)
+  - Vault MCP server OR SOPS+age (secret management)
   - CI MCP server (GitHub/GitLab/Gitea) OR Filebase for local-only workflows
+  - Docker and Docker Compose (for Filebase local staging)
 
 ## Plugin Structure
 
