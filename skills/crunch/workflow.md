@@ -253,15 +253,20 @@ If `-t` target is also provided, continue transitioning toward target state.
 
 ## Enrich Phase (state:enrich)
 
-> **CRITICAL**: The most important output of this phase is the **Definition of Done (DoD) checklist**.
-> This checklist will be used during VALIDATION to verify the work on staging before merging to main.
+> **CRITICAL**: The most important outputs of this phase are:
+> 1. **Definition of Done (DoD) checklist** - For staging validation
+> 2. **Test Plan** - For test coverage requirements
 
 ### For Bugs: Investigation
 
 1. **Reproduce** the bug
 2. **Root cause analysis** - find where and why
 3. **Fix approach** - document proposed fix
-4. **Create DoD checklist**
+4. **Test Plan** (qa-engineer agent)
+   - Regression test requirements
+   - Edge cases from root cause analysis
+   - Coverage targets
+5. **Create DoD checklist**
 
 ### For Features: Specification
 
@@ -277,12 +282,18 @@ Use planning mode and agents per CLAUDE.md:
    - Define interfaces
    - List open questions
 
-3. **Negotiation** (architect ↔ dev agent)
-   - Dev agent reviews spec
+3. **Test Planning** (qa-engineer agent)
+   - Create Test Plan artifact
+   - Identify critical paths requiring coverage
+   - Define coverage thresholds
+   - Enumerate edge cases to test
+
+4. **Negotiation** (architect ↔ dev agent)
+   - Dev agent reviews spec AND Test Plan
    - Architect clarifies/updates
    - Repeat until converged
 
-4. **Create DoD checklist**
+5. **Create DoD checklist**
 
 ### Definition of Done (DoD) Checklist
 
@@ -337,6 +348,29 @@ Update issue body:
 **Regression**:
 - [ ] {Regression check 1}
 - [ ] {Regression check 2}
+
+### Test Plan
+
+#### Required Test Levels
+| Level | Required | Rationale |
+|-------|----------|-----------|
+| Unit | {Yes/No} | {reason} |
+| Integration | {Yes/No} | {reason} |
+| E2E | {Yes/No} | {reason} |
+
+#### Critical Paths (P0)
+1. {path} - {expected behavior}
+
+#### Edge Cases (P1)
+| Edge Case | Test Approach |
+|-----------|---------------|
+| {case} | {approach} |
+
+#### Coverage Targets
+| Metric | Threshold |
+|--------|-----------|
+| Line Coverage | {X}% |
+| Branch Coverage | {Y}% |
 
 **Status**: Enrich Complete
 ```
@@ -400,12 +434,48 @@ Update issue body:
 
 **When**: Implementation complete, CI passing
 
+### TEST-VERIFICATION Gate
+
+> **MUST PASS**: Before code review, verify test coverage and quality.
+
+```
+1. Load Test Plan from issue body
+
+2. Run test analysis:
+   /test-analyze -c -i {issue_number}
+
+3. Check against Test Plan requirements:
+   - Coverage meets threshold from Test Plan?
+   - Critical paths (P0) have tests?
+   - Quality score >= 60?
+
+4. Gate decision:
+   IF all checks pass:
+     → Proceed to Code Review
+   ELSE:
+     → Report gaps
+     → Stay in IMPLEMENTING
+     → Dev agent addresses gaps
+     → Re-run TEST-VERIFICATION
+```
+
+**TEST-VERIFICATION Output**:
+```markdown
+### TEST-VERIFICATION: {PASS|FAIL}
+
+**Coverage**: {X}% (target: {Y}%)
+**Critical Paths**: {covered}/{total} covered
+**Quality Score**: {score}/100
+
+{If FAIL: list of gaps to address}
+```
+
 ### Code Review (reviewer agent per CLAUDE.md)
 
-Review loop until approved:
-1. Reviewer identifies issues
+Review loop until approved (now includes 6 agents with Test Quality Reviewer):
+1. Invoke /review skill (includes Test Quality Reviewer)
 2. Dev agent addresses feedback
-3. Re-review
+3. Re-review until approved
 
 ### Deploy to Staging
 
@@ -414,6 +484,11 @@ Review loop until approved:
 
 Update issue body:
 ```markdown
+### TEST-VERIFICATION
+**Status**: PASS
+**Coverage**: {X}% (target: {Y}%)
+**Critical Paths**: All P0 paths covered
+
 ### Review
 
 **Round {N}**: {APPROVED|CHANGES_REQUESTED}
@@ -717,14 +792,16 @@ Code Review:
 | Input negotiation | (conversation) | (conversation) | (conversation) |
 | Exploration | planning mode | + security-analyst | + devops-engineer |
 | Specification | architect | + security-analyst | + devops-engineer |
+| **Test Planning** | **qa-engineer** | + security-analyst | + devops-engineer |
 | Spec Review | architect ↔ dev-* | + security-analyst | + devops-engineer |
 | Implementation | dev-* (per language) | dev-* | dev-* |
-| Code Review | reviewer | + security-analyst | + devops-engineer |
+| **TEST-VERIFICATION** | **qa-engineer** | qa-engineer | qa-engineer |
+| Code Review | reviewer + **test-quality** | + security-analyst | + devops-engineer |
 | Validation | reviewer | security-analyst | devops-engineer |
 | Documentation | techwriter | techwriter | techwriter |
 | Deployment | devops | devops | devops |
 
-**Legend**: `+` means "in addition to default"
+**Legend**: `+` means "in addition to default", **bold** = new in QA enhancement
 
 ---
 

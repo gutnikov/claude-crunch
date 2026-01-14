@@ -153,7 +153,7 @@ Use a fast agent (Haiku) to create a brief summary:
 
 ## Phase 3: Parallel Agent Review
 
-Launch 5 agents simultaneously using Task tool. Each agent reviews independently and returns a list of issues.
+Launch 6 agents simultaneously using Task tool. Each agent reviews independently and returns a list of issues.
 
 ### Agent #1: CLAUDE.md Compliance
 
@@ -298,6 +298,60 @@ Notes:
 - Focus on comments that provide guidance or warnings
 - Skip standard documentation comments
 ```
+
+### Agent #6: Test Quality Reviewer
+
+**Model**: Sonnet
+
+**Prompt**:
+```
+Analyze the test coverage and quality for the changed code in this PR.
+
+PR diff:
+{pr_diff}
+
+Test Plan (from issue body, if available):
+{test_plan}
+
+Tasks:
+1. Identify which changed source files have corresponding test changes
+2. Verify critical paths from Test Plan have tests (if Test Plan provided)
+3. Assess assertion quality in new/modified tests
+4. Check for test anti-patterns
+5. Identify missing test coverage for new code paths
+
+For each issue found, return:
+- Description of the testing gap or quality issue
+- Why it matters (what could break without this test)
+- File path and line numbers
+- Recommendation for improvement
+
+Focus on:
+- Missing tests for new functions/methods
+- Missing tests for critical paths in Test Plan
+- Weak assertions that don't verify actual behavior
+- Tests testing implementation details instead of behavior
+- Flaky test indicators (timing, external deps, shared state)
+- Untested error handling paths
+
+Skip:
+- Tests for unchanged code (unless Test Plan explicitly requires)
+- Minor style issues in tests
+- Test framework preferences
+- Pre-existing test gaps not related to this PR
+```
+
+**Test Quality Criteria**:
+
+| Criterion | Severity |
+|-----------|----------|
+| Missing tests for new functions | HIGH |
+| Missing tests for Test Plan critical path | CRITICAL |
+| No meaningful assertions in test | MEDIUM |
+| Test uses timing/sleep | HIGH |
+| Test has shared mutable state | MEDIUM |
+| Test relies on external service | HIGH |
+| Coverage regression from PR | HIGH |
 
 ### Issue Format
 

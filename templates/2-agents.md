@@ -12,6 +12,7 @@ This project uses a multi-agent system for development workflow management.
 | dev-python        | Python implementation | Python features, scripts, data processing, ML/AI code            |
 | dev-react         | TypeScript+React impl | Frontend components, React hooks, TypeScript interfaces          |
 | reviewer          | Quality review        | Code review, documentation review, configuration review          |
+| qa-engineer       | Test quality          | Test planning, coverage analysis, TDD enforcement, test strategy |
 | security-analyst  | Security analysis     | Threat modeling, vulnerability assessment, secure code review    |
 | techwriter        | Documentation         | Creating/updating guides, API docs, onboarding docs              |
 | devops            | Infrastructure        | Deployment, monitoring, alerting, system administration          |
