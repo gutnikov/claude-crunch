@@ -497,3 +497,170 @@ Check if:
 - Verify CLAUDE.md has correct CI Platform section
 - Check MCP server is properly configured
 - Refer to platform-specific MCP documentation
+
+---
+
+## Knowledge Integration
+
+After review completes, capture valuable feedback for the knowledge base.
+
+### Feedback Capture (Phase 6)
+
+After Phase 5 (Post Comment), capture high-confidence findings:
+
+```
+FOR each issue with score >= 80:
+  1. Create feedback entry:
+     /learn -t feedback --from-review
+
+  2. Entry contains:
+     - Finding description
+     - Severity (mapped from issue type)
+     - Category (inferred from agent source)
+     - File context (file, lines, code snippet)
+     - Recommendation
+     - PR and issue references
+
+  3. Store as KE-feedback-{date}-{hash}
+
+  4. Check for pattern promotion
+```
+
+### Feedback Entry Structure
+
+```json
+{
+  "id": "KE-feedback-20250114-a1b2",
+  "type": "feedback",
+  "source": {
+    "type": "review",
+    "pr": "#45",
+    "issue": "#42",
+    "reviewer_agent": "bug-scanner"
+  },
+  "content": {
+    "finding": "Missing null check before accessing user.email",
+    "severity": "HIGH",
+    "category": "bug",
+    "file_context": {
+      "file": "src/auth/handler.ts",
+      "line_start": 45,
+      "line_end": 47,
+      "code_snippet": "const email = user.email.toLowerCase();"
+    },
+    "recommendation": "Add null check: if (user?.email)",
+    "remediation_applied": false,
+    "confidence_score": 85
+  }
+}
+```
+
+### Category Mapping
+
+Map review agent to feedback category:
+
+| Review Agent | Feedback Category |
+|--------------|-------------------|
+| bug-scanner | bug |
+| CLAUDE.md Compliance | compliance |
+| Git History Analyzer | history |
+| Previous PR Reviewer | regression |
+| Code Comment Checker | documentation |
+
+### Severity Mapping
+
+Map confidence score to severity:
+
+| Score Range | Severity |
+|-------------|----------|
+| 90-100 | CRITICAL |
+| 80-89 | HIGH |
+| 70-79 | MEDIUM |
+| Below 70 | (filtered out) |
+
+### Pattern Promotion
+
+After capturing feedback, check for pattern promotion:
+
+```
+1. Query similar feedback entries:
+   - Same category
+   - Similar finding text (similarity > 0.7)
+   - Same file patterns (e.g., all in src/auth/)
+
+2. IF count >= pattern_promotion_threshold (default: 3):
+   a. Gather all similar feedback entries
+   b. Synthesize pattern:
+      - Name: Generalized pattern name
+      - Description: Common issue across findings
+      - Example: Best code example
+      - Domains: Affected domains
+   c. Create KE-pattern-* entry
+   d. Link all source feedback entries
+   e. Report to user: "Promoted to pattern: {name}"
+
+3. Update feedback entries:
+   - Set may_become_pattern = false (now promoted)
+   - Add relationship to pattern entry
+```
+
+### Pattern Detection Examples
+
+**Example 1: Null check pattern**
+```
+Feedback 1: "Missing null check on user.email" (src/auth/handler.ts)
+Feedback 2: "Missing null check on user.name" (src/profile/view.ts)
+Feedback 3: "Missing null check on user.settings" (src/settings/api.ts)
+
+→ Promotes to pattern:
+   Name: "Null Check on User Properties"
+   Description: "Always check user object properties before access"
+   Example: "if (user?.email) { ... }"
+```
+
+**Example 2: Auth pattern**
+```
+Feedback 1: "Token refresh without mutex" (src/auth/token.ts)
+Feedback 2: "Concurrent token access" (src/auth/session.ts)
+Feedback 3: "Race condition in refresh" (src/auth/refresh.ts)
+
+→ Promotes to pattern:
+   Name: "Token Operation Mutex"
+   Description: "All token operations need mutex protection"
+   Example: "await tokenLock.runExclusive(() => refresh())"
+```
+
+### Remediation Tracking
+
+Track when feedback is addressed:
+
+```
+When PR is updated after review:
+  1. Re-run review skill
+  2. IF issue no longer present:
+     - Update feedback entry: remediation_applied = true
+     - Link to fixing commit
+```
+
+### Knowledge Capture Summary
+
+| Review Phase | Knowledge Action |
+|--------------|------------------|
+| Phase 5 complete | **Capture**: High-confidence feedback entries |
+| After capture | **Check**: Pattern promotion threshold |
+| If threshold met | **Create**: Pattern entry, link feedback |
+| PR updated | **Track**: Remediation status |
+
+### Integration with Crunch
+
+The feedback captured here flows into the crunch workflow:
+
+1. **ENRICH phase** queries feedback for the domain
+2. **IMPLEMENTING phase** gets warnings about common issues
+3. **Agent selection** considers reviewer effectiveness
+
+This creates a continuous learning loop:
+```
+Review → Capture Feedback → Detect Patterns →
+Inject into Future Work → Better Code → Fewer Issues
+```

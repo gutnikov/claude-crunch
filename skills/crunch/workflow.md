@@ -796,6 +796,192 @@ Code Review:
 
 ---
 
+## Knowledge Integration
+
+The crunch skill integrates with the knowledge management system to:
+- **Inject** relevant context before starting work
+- **Capture** lessons learned as work completes
+- **Track** agent effectiveness for future optimization
+
+### Knowledge Injection Points
+
+#### On ENRICH Entry
+
+Before starting investigation or specification:
+
+```
+1. Check if .claude/knowledge/index.json exists
+   IF not: Skip injection (knowledge base empty)
+
+2. Generate context brief:
+   - Invoke knowledge-manager agent OR
+   - Use /knowledge --brief -r {issue_number}
+
+3. Context brief contains:
+   - Related past issues (max 3, relevance > 70)
+   - Active architectural decisions for this domain
+   - Applicable patterns and anti-patterns
+   - Agent effectiveness recommendations
+
+4. Inject into agent prompts:
+   - Add "## Knowledge Context" section to system prompt
+   - Include for: architect, security-analyst, devops-engineer, dev-* agents
+```
+
+**Context Brief Format**:
+```markdown
+## Knowledge Context
+
+### Related Past Issues
+- **#N** (relevance: X%): Brief description - outcome
+
+### Relevant Decisions
+- **ADR-N**: Decision title - key point
+
+### Known Patterns
+- **PATTERN**: Name - when to use
+- **ANTI-PATTERN**: Name - what to avoid
+
+### Agent Effectiveness
+- {agent}: X% success on {domain} issues (N total)
+```
+
+#### On IMPLEMENTING Entry
+
+Before implementation begins:
+
+```
+1. Identify files to be modified (from spec/investigation)
+
+2. Query knowledge base:
+   /knowledge -t resolution -t pattern --files {file_list}
+
+3. Extract warnings:
+   - Past bugs in these files
+   - Review feedback for these modules
+   - Patterns applicable to this code
+
+4. Inject into dev agent prompt:
+   - "## File-Specific Knowledge" section
+   - Include bug history and patterns
+```
+
+### Knowledge Capture Points
+
+#### On ENRICH Exit (Spec/Investigation Created)
+
+When transitioning ENRICH → READY:
+
+```
+1. Analyze spec/investigation document for decisions
+
+2. IF architectural decision detected:
+   - Decision statement present
+   - Rationale documented
+   - Alternatives mentioned
+
+3. THEN capture decision:
+   /learn -t decision -i {issue_number}
+
+4. Extract:
+   - Decision title and statement
+   - Rationale
+   - Alternatives considered
+   - Consequences
+
+5. Link to issue and related entries
+```
+
+**Decision Detection Keywords**:
+- "decided to", "will use", "chose", "selected"
+- "approach:", "solution:", "design:"
+- "instead of", "rather than", "over"
+
+#### On DONE Transition
+
+When transitioning READY-TO-MERGE → DONE:
+
+```
+1. Capture full resolution:
+   /learn -i {issue_number}
+
+2. Extract from issue body and branch:
+   - Problem description
+   - Root cause (for bugs)
+   - Solution approach
+   - Files changed (from git diff)
+   - Tests added
+   - Time to resolve (created → closed)
+
+3. Record agent metrics:
+   - Agents used in each phase
+   - Phase durations
+   - Review cycles needed
+
+4. Link to:
+   - Decisions made during ENRICH
+   - Patterns applied or created
+   - Feedback from reviews
+```
+
+### Agent Effectiveness Tracking
+
+Track agent performance for knowledge-aware selection:
+
+```
+After each agent invocation:
+  1. Record: agent, domain, phase, issue_number
+  2. On issue completion (DONE):
+     - Calculate success: reached DONE without major rework
+     - Update agent_metrics in index.json
+
+Metrics tracked:
+  - total_invocations per agent
+  - by_domain: { domain: { count, success_rate, avg_duration } }
+  - by_phase: { phase: { count, success_rate } }
+```
+
+### Knowledge-Aware Agent Selection
+
+Enhance Dynamic Agent Selection with effectiveness data:
+
+```
+Original selection:
+  1. Detect domain from labels/keywords
+  2. Select agent from phase-to-agent mapping
+
+Enhanced selection:
+  1. Detect domain from labels/keywords
+  2. Query agent_metrics for domain effectiveness
+  3. IF effectiveness data available:
+     - Weight selection by past success rate
+     - Consider alternatives with better track record
+  4. For ambiguous cases:
+     - Include effectiveness in AskUserQuestion options
+     - Example: "security-analyst (94% on auth, 23 issues)"
+```
+
+### Workflow State Hooks Summary
+
+| State Transition | Knowledge Action |
+|------------------|------------------|
+| → ENRICH | **Inject**: Context brief (related issues, ADRs, patterns) |
+| ENRICH → READY | **Capture**: Decision (if spec contains architectural choice) |
+| → IMPLEMENTING | **Inject**: File-specific patterns and bug history |
+| Code Review | **Capture**: Feedback (via /review integration) |
+| → DONE | **Capture**: Full resolution with metrics |
+
+### Error Handling
+
+| Condition | Handling |
+|-----------|----------|
+| Knowledge base missing | Skip injection, log warning, continue workflow |
+| Injection fails | Log error, continue without context (don't block) |
+| Capture fails | Log error, continue (capture is best-effort) |
+| Duplicate entry | Link to existing, don't create new |
+
+---
+
 ## CI MCP Operations
 
 ### Issue Creation (for new issues)
