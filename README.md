@@ -53,6 +53,7 @@ Commands are namespaced with `claude-crunch:` when installed as a plugin.
 ```
 
 Interactive wizard that:
+
 1. Gathers project information (name, description)
 2. Configures CI platform (GitHub/GitLab/Gitea/Filebase)
 3. Sets up environment variables and feature flags
@@ -79,6 +80,7 @@ INPUT → BACKLOG → ENRICH → READY → IMPLEMENTING → VALIDATION → DOCS 
 ```
 
 Features:
+
 - Dynamic agent selection based on issue domain
 - TDD enforcement
 - Automatic branch creation and PR workflow
@@ -94,6 +96,7 @@ For projects without access to hosted CI platforms, use Filebase with local Dock
 ```
 
 This provides:
+
 - **Local issue/PR tracking** - JSON files in `.claude/ci-filebase/`
 - **CI pipeline simulation** - Run lint, test, build locally
 - **Local Docker staging** - Deploy and validate in containers
@@ -123,15 +126,15 @@ This provides:
 
 #### Docker CI Commands
 
-| Command | Description |
-|---------|-------------|
-| `docker init` | Initialize Docker CI infrastructure |
-| `docker ci` | Run local CI pipeline (lint, test, build) |
-| `docker deploy staging` | Deploy to local Docker staging |
-| `docker logs` | View staging container logs |
-| `docker health` | Check staging health status |
-| `docker stop` | Stop local staging environment |
-| `docker rebuild` | Rebuild and restart staging |
+| Command                 | Description                               |
+| ----------------------- | ----------------------------------------- |
+| `docker init`           | Initialize Docker CI infrastructure       |
+| `docker ci`             | Run local CI pipeline (lint, test, build) |
+| `docker deploy staging` | Deploy to local Docker staging            |
+| `docker logs`           | View staging container logs               |
+| `docker health`         | Check staging health status               |
+| `docker stop`           | Stop local staging environment            |
+| `docker rebuild`        | Rebuild and restart staging               |
 
 ## Agents
 
@@ -139,33 +142,33 @@ This provides:
 
 Agents are organized in a 4-tier hierarchy:
 
-| Tier | Role | Agents |
-|------|------|--------|
-| 1 | Orchestrator | `orchestrator` |
-| 2 | Supervisors | `system-architect`, `security-analyst`, `devops-engineer` |
-| 3 | Specialists | `dev-*`, `reviewer`, `qa-engineer`, `techwriter`, `knowledge-manager` |
-| 4 | Responders | `incident-responder`, `log-analyst`, `code-health-analyst`, `dependency-manager` |
+| Tier | Role         | Agents                                                                           |
+| ---- | ------------ | -------------------------------------------------------------------------------- |
+| 1    | Orchestrator | `orchestrator`                                                                   |
+| 2    | Supervisors  | `system-architect`, `security-analyst`, `devops-engineer`                        |
+| 3    | Specialists  | `dev-*`, `reviewer`, `qa-engineer`, `techwriter`, `knowledge-manager`            |
+| 4    | Responders   | `incident-responder`, `log-analyst`, `code-health-analyst`, `dependency-manager` |
 
 ### Available Agents
 
-| Agent | Purpose |
-|-------|---------|
-| `orchestrator` | Multi-agent coordination for complex issues |
-| `system-architect` | System design, architecture decisions, technical specifications |
-| `security-analyst` | Threat modeling, vulnerability assessment, secure code review (VETO authority) |
-| `devops-engineer` | Infrastructure, CI/CD, monitoring, deployment |
-| `dev-cpp` | C++ implementation, memory management, performance optimization |
-| `dev-go` | Go services, concurrency patterns, CLI tools |
-| `dev-python` | Python development, data processing, ML/AI |
-| `dev-react` | TypeScript/React frontend, components, hooks |
-| `reviewer` | Code review, documentation review, configuration review |
-| `qa-engineer` | Test planning, coverage analysis, TDD enforcement |
-| `techwriter` | Documentation, API docs, user guides |
-| `knowledge-manager` | Learning from history, pattern analysis |
-| `code-health-analyst` | Code metrics, tech debt detection |
-| `log-analyst` | Log pattern detection, anomaly detection |
-| `dependency-manager` | CVE scanning, dependency updates |
-| `incident-responder` | Staging validation, anomaly diagnosis |
+| Agent                 | Purpose                                                                        |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `orchestrator`        | Multi-agent coordination for complex issues                                    |
+| `system-architect`    | System design, architecture decisions, technical specifications                |
+| `security-analyst`    | Threat modeling, vulnerability assessment, secure code review (VETO authority) |
+| `devops-engineer`     | Infrastructure, CI/CD, monitoring, deployment                                  |
+| `dev-cpp`             | C++ implementation, memory management, performance optimization                |
+| `dev-go`              | Go services, concurrency patterns, CLI tools                                   |
+| `dev-python`          | Python development, data processing, ML/AI                                     |
+| `dev-react`           | TypeScript/React frontend, components, hooks                                   |
+| `reviewer`            | Code review, documentation review, configuration review                        |
+| `qa-engineer`         | Test planning, coverage analysis, TDD enforcement                              |
+| `techwriter`          | Documentation, API docs, user guides                                           |
+| `knowledge-manager`   | Learning from history, pattern analysis                                        |
+| `code-health-analyst` | Code metrics, tech debt detection                                              |
+| `log-analyst`         | Log pattern detection, anomaly detection                                       |
+| `dependency-manager`  | CVE scanning, dependency updates                                               |
+| `incident-responder`  | Staging validation, anomaly diagnosis                                          |
 
 ### Customizing Agents
 
@@ -189,39 +192,39 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 
 ### Core Templates
 
-| Template | Content |
-|----------|---------|
-| `1-project.md` | Project name and description |
-| `2-agents.md` | Agent system and hierarchy reference |
-| `3-tdd.md` | Test-driven development requirements |
-| `4-observability.md` | Logging and metrics standards |
-| `5-workflow.md` | Task types and state flow |
-| `6-ci.md` | CI/CD platform configuration |
-| `6-ci-github.md` | GitHub MCP reference |
-| `6-ci-gitlab.md` | GitLab MCP reference |
-| `6-ci-gitea.md` | Gitea MCP reference |
-| `6-ci-filebase.md` | File-based CI reference (no MCP required) |
-| `7-configuration.md` | Environment variables and feature flags |
-| `8-secret-management.md` | Secret management approach selection |
-| `8-secrets-vault.md` | Vault MCP reference |
-| `8-secrets-sops.md` | SOPS+age reference (file-based encryption) |
-| `9-deployment.md` | Staging and production deployment |
-| `99-setup-checklist.md` | Setup verification checklist |
+| Template                 | Content                                    |
+| ------------------------ | ------------------------------------------ |
+| `1-project.md`           | Project name and description               |
+| `2-agents.md`            | Agent system and hierarchy reference       |
+| `3-tdd.md`               | Test-driven development requirements       |
+| `4-observability.md`     | Logging and metrics standards              |
+| `5-workflow.md`          | Task types and state flow                  |
+| `6-ci.md`                | CI/CD platform configuration               |
+| `6-ci-github.md`         | GitHub MCP reference                       |
+| `6-ci-gitlab.md`         | GitLab MCP reference                       |
+| `6-ci-gitea.md`          | Gitea MCP reference                        |
+| `6-ci-filebase.md`       | File-based CI reference (no MCP required)  |
+| `7-configuration.md`     | Environment variables and feature flags    |
+| `8-secret-management.md` | Secret management approach selection       |
+| `8-secrets-vault.md`     | Vault MCP reference                        |
+| `8-secrets-sops.md`      | SOPS+age reference (file-based encryption) |
+| `9-deployment.md`        | Staging and production deployment          |
+| `99-setup-checklist.md`  | Setup verification checklist               |
 
 ### Orchestration Templates
 
-| Template | Content |
-|----------|---------|
-| `acp-schema.md` | Agent Communication Protocol message schemas |
-| `acp-contracts.md` | Agent input/output contracts |
-| `hierarchy-config.md` | 4-tier agent hierarchy configuration |
-| `conflict-resolution.md` | Structured debate and voting protocol |
-| `veto-rules.md` | Security veto authority rules |
-| `team-composition.md` | Dynamic team selection algorithm |
-| `agent-performance-schema.md` | Performance tracking for adaptive routing |
-| `routing-config.md` | Adaptive agent routing configuration |
-| `execution-graph.md` | Parallel execution dependency graphs |
-| `checkpoint-config.md` | Workflow checkpoint and recovery |
+| Template                      | Content                                      |
+| ----------------------------- | -------------------------------------------- |
+| `acp-schema.md`               | Agent Communication Protocol message schemas |
+| `acp-contracts.md`            | Agent input/output contracts                 |
+| `hierarchy-config.md`         | 4-tier agent hierarchy configuration         |
+| `conflict-resolution.md`      | Structured debate and voting protocol        |
+| `veto-rules.md`               | Security veto authority rules                |
+| `team-composition.md`         | Dynamic team selection algorithm             |
+| `agent-performance-schema.md` | Performance tracking for adaptive routing    |
+| `routing-config.md`           | Adaptive agent routing configuration         |
+| `execution-graph.md`          | Parallel execution dependency graphs         |
+| `checkpoint-config.md`        | Workflow checkpoint and recovery             |
 
 ## Requirements
 
