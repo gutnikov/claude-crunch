@@ -9,6 +9,7 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 ## Current State Summary
 
 **claude-crunch** is a Claude Code plugin providing:
+
 - **3 Skills**: `/init` (project setup), `/crunch` (9-state issue workflow), `/review` (multi-agent code review)
 - **9 Agents**: system-architect, security-analyst, devops-engineer, dev-{cpp,go,python,react}, techwriter, reviewer
 - **Workflow**: INPUT → BACKLOG → ENRICH → READY → IMPLEMENTING → VALIDATION → DOCS → READY-TO-MERGE → DONE
@@ -18,13 +19,13 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 
 ## Hypothesis Comparison Matrix
 
-| # | Hypothesis | Autonomy Impact | Complexity | Risk | Dependencies | Score |
-|---|------------|-----------------|------------|------|--------------|-------|
-| 1 | Automated Testing & QA | HIGH | MEDIUM | LOW | Existing CI | **85/100** |
-| 2 | Self-Healing & Remediation | VERY HIGH | HIGH | MEDIUM | Monitoring stack | **82/100** |
-| 3 | Knowledge Management | HIGH | MEDIUM | LOW | Local storage | **88/100** |
-| 4 | Proactive Issue Detection | VERY HIGH | HIGH | MEDIUM | Prometheus, Loki | **80/100** |
-| 5 | Multi-Agent Orchestration | TRANSFORMATIVE | VERY HIGH | HIGH | All above | **75/100** |
+| #   | Hypothesis                 | Autonomy Impact | Complexity | Risk   | Dependencies     | Score      |
+| --- | -------------------------- | --------------- | ---------- | ------ | ---------------- | ---------- |
+| 1   | Automated Testing & QA     | HIGH            | MEDIUM     | LOW    | Existing CI      | **85/100** |
+| 2   | Self-Healing & Remediation | VERY HIGH       | HIGH       | MEDIUM | Monitoring stack | **82/100** |
+| 3   | Knowledge Management       | HIGH            | MEDIUM     | LOW    | Local storage    | **88/100** |
+| 4   | Proactive Issue Detection  | VERY HIGH       | HIGH       | MEDIUM | Prometheus, Loki | **80/100** |
+| 5   | Multi-Agent Orchestration  | TRANSFORMATIVE  | VERY HIGH  | HIGH   | All above        | **75/100** |
 
 ---
 
@@ -35,18 +36,21 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 **Proposal**: New `qa-engineer` agent, Test Plans artifact, `/test-analyze` skill, 6th review agent for test quality
 
 **Key Components**:
+
 - Test Plan created alongside DoD during ENRICH
 - qa-engineer verifies TDD compliance before code review
 - Coverage enforcement gates (configurable thresholds)
 - Mutation testing integration
 
 **Strengths**:
+
 - Low risk, high immediate value
 - Addresses gap: TDD is documented but not enforced
 - Builds on existing review infrastructure
 - Language-agnostic approach
 
 **Weaknesses**:
+
 - Requires CI integration for coverage reports
 - May slow down fast iterations initially
 
@@ -59,6 +63,7 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 **Proposal**: Two new states (MONITORING, REMEDIATION), three new agents (failure-detector, healer, feedback-analyst), `/rollback` and `/heal` skills
 
 **Key Components**:
+
 - Post-merge MONITORING state watches for anomalies
 - Four failure categories with severity-based response
 - Pattern library for known issues and pre-approved fixes
@@ -66,12 +71,14 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 - Feedback loops create issues from production telemetry
 
 **Strengths**:
+
 - Closes the loop from DONE back to development
 - Addresses critical gap: post-deployment is currently manual
 - Clear escalation criteria prevent runaway automation
 - Leverages existing observability requirements
 
 **Weaknesses**:
+
 - Requires mature monitoring infrastructure
 - Risk of cascading automation failures
 - Complex rollback safety checks needed
@@ -85,6 +92,7 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 **Proposal**: `/learn`, `/knowledge`, `/analyze` skills, `knowledge-manager` agent, structured knowledge base in `.claude/knowledge/`
 
 **Key Components**:
+
 - Automatic capture at every workflow state transition
 - Searchable index of past decisions, solutions, patterns
 - Pattern recognition across issues (recurring bugs, anti-patterns)
@@ -92,12 +100,14 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 - Review feedback learning to improve future implementations
 
 **Strengths**:
+
 - Minimal external dependencies (local file storage)
 - Immediate value: prevents repeating mistakes
 - Enhances all other hypotheses (provides data for learning)
 - Low risk, can be rolled out incrementally
 
 **Weaknesses**:
+
 - Knowledge quality depends on capture discipline
 - Index maintenance overhead
 - Stale knowledge can mislead
@@ -111,6 +121,7 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 **Proposal**: `/patrol` skill with six detection modules, three new agents (code-health-analyst, log-analyst, dependency-manager), Prometheus/Loki MCP integrations
 
 **Key Components**:
+
 - Code smell and tech debt detection
 - Security vulnerability scanning with auto-issue creation
 - Performance anomaly detection from metrics
@@ -119,12 +130,14 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 - Alert correlation and deduplication
 
 **Strengths**:
+
 - Shifts from reactive to proactive development
 - Feeds into existing `/crunch` workflow seamlessly
 - Addresses security and maintenance gaps proactively
 - Continuous mode enables background monitoring
 
 **Weaknesses**:
+
 - Requires Prometheus and Loki infrastructure
 - Risk of issue flood if thresholds not tuned
 - False positive management critical
@@ -138,6 +151,7 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 **Proposal**: Agent Communication Protocol (ACP), hierarchical agent structure (Orchestrator → Supervisors → Workers), conflict resolution framework, dynamic team composition, performance-based adaptive routing
 
 **Key Components**:
+
 - Formal message contracts between agents
 - Structured debate protocol for disagreements
 - Veto power rules (security has precedence)
@@ -146,12 +160,14 @@ Five parallel Opus agents analyzed the claude-crunch repository and generated hy
 - Agent performance tracking and quality metrics
 
 **Strengths**:
+
 - Most transformative long-term potential
 - Enables true collaborative AI development
 - Self-improving through performance tracking
 - Scales to complex multi-domain problems
 
 **Weaknesses**:
+
 - Highest complexity (24-week implementation)
 - Requires all other systems as foundation
 - Risk of over-engineering for simple issues
@@ -196,39 +212,42 @@ Phase 5: Multi-Agent Orchestration (H5)
 
 ### Critical Success Factors
 
-| Factor | Required For | Current State |
-|--------|--------------|---------------|
-| Prometheus/metrics | H2, H4 | Required in templates (not enforced) |
-| Log aggregation | H2, H4 | Required in templates (not enforced) |
-| CI MCP maturity | H1, H2, H4 | Available for GitHub/GitLab/Gitea |
-| Local storage | H3 | Available (filesystem) |
-| Agent non-interactive mode | All | Already implemented |
+| Factor                     | Required For | Current State                        |
+| -------------------------- | ------------ | ------------------------------------ |
+| Prometheus/metrics         | H2, H4       | Required in templates (not enforced) |
+| Log aggregation            | H2, H4       | Required in templates (not enforced) |
+| CI MCP maturity            | H1, H2, H4   | Available for GitHub/GitLab/Gitea    |
+| Local storage              | H3           | Available (filesystem)               |
+| Agent non-interactive mode | All          | Already implemented                  |
 
 ### Risk Mitigation
 
-| Risk | Mitigation Strategy |
-|------|---------------------|
-| Over-automation | Human escalation gates at every level |
-| False positives | Confidence scoring (80+ threshold) |
-| Knowledge staleness | Decay scoring, periodic review |
-| Issue flood | Deduplication, severity-based batching |
-| Agent conflicts | Formal debate protocol, veto rules |
+| Risk                | Mitigation Strategy                    |
+| ------------------- | -------------------------------------- |
+| Over-automation     | Human escalation gates at every level  |
+| False positives     | Confidence scoring (80+ threshold)     |
+| Knowledge staleness | Decay scoring, periodic review         |
+| Issue flood         | Deduplication, severity-based batching |
+| Agent conflicts     | Formal debate protocol, veto rules     |
 
 ---
 
 ## Recommended First Steps
 
 ### Quick Wins (1-2 weeks each)
+
 1. **Add `qa-engineer` agent** - Immediate test quality improvement
 2. **Create knowledge capture hooks** - Start accumulating learning data
 3. **Implement basic `/knowledge` skill** - Query past decisions
 
 ### Medium-term (1-2 months)
+
 4. **Integrate test coverage with `/review`** - Enforce quality gates
 5. **Add code health detection to ENRICH** - Proactive debt identification
 6. **Implement failure pattern library** - Foundation for self-healing
 
 ### Long-term (3-6 months)
+
 7. **Full `/patrol` implementation** - Proactive issue detection
 8. **MONITORING/REMEDIATION states** - Close the feedback loop
 9. **Agent Communication Protocol** - Multi-agent collaboration
@@ -237,19 +256,20 @@ Phase 5: Multi-Agent Orchestration (H5)
 
 ## Summary Ratings
 
-| Rank | Hypothesis | Score | Recommendation |
-|------|------------|-------|----------------|
-| 1 | Knowledge Management | 88/100 | **START HERE** - Foundation for all others |
-| 2 | Automated Testing & QA | 85/100 | **HIGH PRIORITY** - Immediate quality gains |
-| 3 | Self-Healing & Remediation | 82/100 | **MEDIUM PRIORITY** - After monitoring matures |
-| 4 | Proactive Issue Detection | 80/100 | **MEDIUM PRIORITY** - Requires infrastructure |
-| 5 | Multi-Agent Orchestration | 75/100 | **LONG-TERM** - Transformative but complex |
+| Rank | Hypothesis                 | Score  | Recommendation                                 |
+| ---- | -------------------------- | ------ | ---------------------------------------------- |
+| 1    | Knowledge Management       | 88/100 | **START HERE** - Foundation for all others     |
+| 2    | Automated Testing & QA     | 85/100 | **HIGH PRIORITY** - Immediate quality gains    |
+| 3    | Self-Healing & Remediation | 82/100 | **MEDIUM PRIORITY** - After monitoring matures |
+| 4    | Proactive Issue Detection  | 80/100 | **MEDIUM PRIORITY** - Requires infrastructure  |
+| 5    | Multi-Agent Orchestration  | 75/100 | **LONG-TERM** - Transformative but complex     |
 
 ---
 
 ## Files to Modify/Create
 
 ### New Agents
+
 - `agents/qa-engineer.md`
 - `agents/knowledge-manager.md`
 - `agents/failure-detector.md`
@@ -259,6 +279,7 @@ Phase 5: Multi-Agent Orchestration (H5)
 - `agents/dependency-manager.md`
 
 ### New Skills
+
 - `skills/test-analyze/` - Test quality analysis
 - `skills/learn/` - Knowledge capture
 - `skills/knowledge/` - Knowledge query
@@ -268,11 +289,13 @@ Phase 5: Multi-Agent Orchestration (H5)
 - `skills/heal/` - Self-healing actions
 
 ### New Templates
+
 - `templates/test-plan.md` - Test plan template
 - `templates/failure-categories.md` - Failure classification
 - `templates/knowledge-schema.md` - Knowledge entry format
 
 ### Modified Files
+
 - `skills/crunch/workflow.md` - Add MONITORING/REMEDIATION states
 - `skills/review/workflow.md` - Add 6th agent (test quality)
 - `templates/5-workflow.md` - Extended state machine

@@ -292,25 +292,74 @@ Records successful remediation patterns for matching future incidents.
 
 ## Agent Metrics Schema
 
-Stored in index.json under `agent_metrics`:
+Stored in index.json under `agent_metrics`. Used for adaptive routing and performance tracking.
 
 ```json
 {
   "agent_metrics": {
     "security-analyst": {
       "total_invocations": 0,
+      "success_rate": 0.0,
+      "average_duration_ms": 0,
+
       "by_domain": {
         "security": {
           "count": 0,
+          "successes": 0,
+          "failures": 0,
+          "partials": 0,
           "success_rate": 0.0,
-          "avg_duration": "0h"
+          "avg_duration_ms": 0,
+          "quality_score": 0,
+          "last_invoked": "ISO-8601",
+          "trend": "up|down|stable"
         }
       },
+
       "by_phase": {
-        "enrich": { "count": 0, "success_rate": 0.0 },
-        "review": { "count": 0, "success_rate": 0.0 }
-      }
+        "enrich": { "count": 0, "successes": 0, "failures": 0, "success_rate": 0.0, "avg_duration_ms": 0 },
+        "review": { "count": 0, "successes": 0, "failures": 0, "success_rate": 0.0, "avg_duration_ms": 0 }
+      },
+
+      "quality_indicators": {
+        "review_pass_rate": 0.0,
+        "rework_rate": 0.0,
+        "user_overrides": 0,
+        "veto_rate": 0.0
+      },
+
+      "routing_weight": 1.0,
+
+      "recent_performance": {
+        "last_7_days": { "count": 0, "success_rate": 0.0, "trend": "stable" },
+        "last_30_days": { "count": 0, "success_rate": 0.0, "trend": "stable" }
+      },
+
+      "last_updated": "ISO-8601"
     }
   }
 }
 ```
+
+### Metrics Fields
+
+| Field | Description |
+|-------|-------------|
+| `success_rate` | Overall success rate (0.0-1.0) |
+| `routing_weight` | Adaptive routing preference (0.5-2.0, default 1.0) |
+| `quality_indicators` | Quality metrics affecting routing |
+| `recent_performance` | Short-term trends for adaptive adjustment |
+| `trend` | Performance direction: "up", "down", or "stable" |
+
+### Quality Score Calculation
+
+```
+quality_score = weighted_average(
+  review_pass_rate     × 0.4,
+  (1 - rework_rate)    × 0.3,
+  (1 - override_rate)  × 0.2,
+  on_time_rate         × 0.1
+)
+```
+
+See `templates/agent-performance-schema.md` for full metrics documentation.

@@ -78,6 +78,30 @@ curl -s http://<ALERTMANAGER_URL>/-/healthy
 - [ ] Knowledge index initialized
 - [ ] Knowledge MCP configured (if using external storage)
 
+### Multi-Agent Orchestration (Optional)
+
+> **Note:** Orchestration is automatically enabled when issue complexity is HIGH (score >= 5) or spans multiple domains.
+
+- [ ] Review `templates/hierarchy-config.md` for agent tier structure
+- [ ] Customize agent routing weights in `.claude/routing-config.json` (if needed)
+- [ ] Configure checkpoint retention in `.claude/checkpoint-config.json` (if needed)
+- [ ] Review veto rules in `templates/veto-rules.md`
+
+#### Orchestration Directory Structure
+
+```
+.claude/
+├── acp/
+│   ├── message-log.json       # ACP message history
+│   └── veto-log.json          # Veto decision history
+├── crunch/{issue}/
+│   └── checkpoints/           # Workflow checkpoints
+├── knowledge/
+│   └── index.json             # Includes agent_metrics
+├── routing-config.json        # Adaptive routing config
+└── checkpoint-config.json     # Checkpoint settings
+```
+
 ### Final Verification
 
 - [ ] A `Setup CI` issue is created

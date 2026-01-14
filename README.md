@@ -1,12 +1,14 @@
 # claude-crunch
 
-A Claude Code plugin providing development workflow automation with structured issue processing, specialized agents, and project initialization.
+A Claude Code plugin providing development workflow automation with structured issue processing, multi-agent orchestration, and project initialization.
 
 ## Features
 
-- **9 Specialized Agents** - Domain-specific agents for architecture, security, DevOps, and language-specific development
+- **16 Specialized Agents** - Domain-specific agents with hierarchical coordination for architecture, security, DevOps, and language-specific development
+- **Multi-Agent Orchestration** - Automatic coordination for complex, multi-domain issues with conflict resolution and adaptive routing
 - **Issue Workflow (`/crunch`)** - Process issues through structured states from input to ready-to-merge
 - **Project Initialization (`/init`)** - Interactive setup wizard that generates CLAUDE.md and configures MCP servers
+- **Code Review (`/review`)** - Parallel multi-agent code review with 6 specialized reviewers
 - **Templates** - Predefined sections for building comprehensive project documentation
 
 ## Installation
@@ -82,17 +84,37 @@ Features:
 
 ## Agents
 
+### Agent Hierarchy
+
+Agents are organized in a 4-tier hierarchy:
+
+| Tier | Role | Agents |
+|------|------|--------|
+| 1 | Orchestrator | `orchestrator` |
+| 2 | Supervisors | `system-architect`, `security-analyst`, `devops-engineer` |
+| 3 | Specialists | `dev-*`, `reviewer`, `qa-engineer`, `techwriter`, `knowledge-manager` |
+| 4 | Responders | `incident-responder`, `log-analyst`, `code-health-analyst`, `dependency-manager` |
+
+### Available Agents
+
 | Agent | Purpose |
 |-------|---------|
+| `orchestrator` | Multi-agent coordination for complex issues |
 | `system-architect` | System design, architecture decisions, technical specifications |
-| `security-analyst` | Threat modeling, vulnerability assessment, secure code review |
+| `security-analyst` | Threat modeling, vulnerability assessment, secure code review (VETO authority) |
 | `devops-engineer` | Infrastructure, CI/CD, monitoring, deployment |
 | `dev-cpp` | C++ implementation, memory management, performance optimization |
 | `dev-go` | Go services, concurrency patterns, CLI tools |
 | `dev-python` | Python development, data processing, ML/AI |
 | `dev-react` | TypeScript/React frontend, components, hooks |
-| `techwriter` | Documentation, API docs, user guides |
 | `reviewer` | Code review, documentation review, configuration review |
+| `qa-engineer` | Test planning, coverage analysis, TDD enforcement |
+| `techwriter` | Documentation, API docs, user guides |
+| `knowledge-manager` | Learning from history, pattern analysis |
+| `code-health-analyst` | Code metrics, tech debt detection |
+| `log-analyst` | Log pattern detection, anomaly detection |
+| `dependency-manager` | CVE scanning, dependency updates |
+| `incident-responder` | Staging validation, anomaly diagnosis |
 
 ### Customizing Agents
 
@@ -114,10 +136,12 @@ The agents included in this plugin are **general-purpose templates**. For best r
 
 Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 
+### Core Templates
+
 | Template | Content |
 |----------|---------|
 | `1-project.md` | Project name and description |
-| `2-agents.md` | Agent system reference |
+| `2-agents.md` | Agent system and hierarchy reference |
 | `3-tdd.md` | Test-driven development requirements |
 | `4-observability.md` | Logging and metrics standards |
 | `5-workflow.md` | Task types and state flow |
@@ -128,6 +152,21 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 | `7-configuration.md` | Environment variables and feature flags |
 | `8-deployment.md` | Staging and production deployment |
 | `99-setup-checklist.md` | Setup verification checklist |
+
+### Orchestration Templates
+
+| Template | Content |
+|----------|---------|
+| `acp-schema.md` | Agent Communication Protocol message schemas |
+| `acp-contracts.md` | Agent input/output contracts |
+| `hierarchy-config.md` | 4-tier agent hierarchy configuration |
+| `conflict-resolution.md` | Structured debate and voting protocol |
+| `veto-rules.md` | Security veto authority rules |
+| `team-composition.md` | Dynamic team selection algorithm |
+| `agent-performance-schema.md` | Performance tracking for adaptive routing |
+| `routing-config.md` | Adaptive agent routing configuration |
+| `execution-graph.md` | Parallel execution dependency graphs |
+| `checkpoint-config.md` | Workflow checkpoint and recovery |
 
 ## Requirements
 
@@ -142,11 +181,22 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 claude-crunch/
 ├── .claude-plugin/
 │   └── plugin.json      # Plugin manifest
-├── agents/              # Specialized agent definitions
+├── agents/              # 16 specialized agent definitions
+│   ├── orchestrator.md  # Multi-agent coordinator
+│   ├── system-architect.md
+│   ├── security-analyst.md  # Has veto authority
+│   └── ...
 ├── skills/
 │   ├── init/           # Project initialization skill
-│   └── crunch/         # Issue processing skill
-└── templates/          # CLAUDE.md section templates
+│   ├── crunch/         # Issue processing skill
+│   ├── review/         # Multi-agent code review skill
+│   ├── orchestrate/    # Multi-agent orchestration skill
+│   ├── patrol/         # Continuous monitoring skill
+│   ├── learn/          # Knowledge capture skill
+│   ├── knowledge/      # Knowledge query skill
+│   ├── test-analyze/   # Test quality analysis skill
+│   └── analyze/        # Pattern analysis skill
+└── templates/          # CLAUDE.md section and orchestration templates
 ```
 
 ## License

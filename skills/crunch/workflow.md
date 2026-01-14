@@ -1043,6 +1043,122 @@ All checks passed on staging.
 
 ---
 
+## Orchestration Integration
+
+Complex issues benefit from multi-agent coordination. The orchestrator is automatically activated when issue complexity exceeds thresholds.
+
+### Complexity Scoring
+
+Calculate complexity score at workflow entry:
+
+| Factor | Weight | Condition |
+|--------|--------|-----------|
+| Multi-domain | +2 | Issue spans >= 2 domains |
+| High file count | +1 | Estimated files >= 10 |
+| Security involved | +3 | Security domain detected |
+| Breaking change | +2 | `breaking-change` label present |
+| Prior failures | +2 | Previous attempt returned to IMPLEMENTING |
+
+**Complexity Levels**:
+- **LOW** (0-2): Single agent handles workflow
+- **MEDIUM** (3-4): Optional orchestration
+- **HIGH** (5-7): Orchestrator activated
+- **CRITICAL** (8+): Orchestrator + user checkpoints
+
+### Orchestrator Activation
+
+Automatically invoke `/orchestrate` when ANY condition is true:
+
+```
+orchestration_required = (
+  complexity_score >= 5 OR
+  len(detected_domains) >= 2 OR
+  issue.has_label("complex") OR
+  previous_attempt_failed
+)
+```
+
+### Orchestrated Workflow
+
+When orchestrator is active:
+
+```
+1. ENTRY PHASE
+   ├── Calculate complexity score
+   ├── Detect all applicable domains
+   ├── Check orchestration_required
+   └── IF required: invoke /orchestrate
+
+2. /ORCHESTRATE EXECUTION
+   ├── Team composition (select agents for domains)
+   ├── Build execution graph (dependencies, parallelization)
+   ├── Create checkpoints (recovery points)
+   └── Return team and graph to /crunch
+
+3. PHASE EXECUTION
+   ├── For each batch in execution_graph:
+   │   ├── Launch parallel agents via Task tool
+   │   ├── Await results
+   │   ├── Check for conflicts
+   │   └── Save checkpoint
+   └── Merge results and continue
+
+4. CONFLICT RESOLUTION
+   ├── IF agents disagree:
+   │   ├── Invoke conflict resolution protocol
+   │   ├── Structured debate
+   │   ├── Weighted voting
+   │   └── Apply resolution
+   └── Record decision in knowledge base
+
+5. COMPLETION
+   ├── Update agent metrics
+   ├── Archive checkpoints
+   └── Record workflow summary
+```
+
+### Team Composition by Phase
+
+| Phase | Complexity < 5 | Complexity >= 5 |
+|-------|----------------|-----------------|
+| ENRICH | Primary agent only | Orchestrator + team |
+| IMPLEMENTING | Dev agent | Dev + qa-engineer |
+| VALIDATION | Reviewer | 6 parallel reviewers |
+| DOCS | Techwriter | Techwriter |
+
+### Checkpoint Triggers
+
+Save workflow state automatically at:
+
+- Phase transitions (ENRICH→READY, etc.)
+- Before agent invocation
+- After conflict resolution
+- Every 10 minutes during long phases
+
+Checkpoint location: `.claude/crunch/{issue}/checkpoints/`
+
+### Performance Tracking
+
+After each agent invocation:
+
+```
+update_agent_metrics({
+  agent: agent_name,
+  domain: issue.primary_domain,
+  phase: current_phase,
+  outcome: "success" | "partial" | "failure",
+  duration_ms: elapsed_time,
+  quality_indicators: {
+    review_pass_rate: ...,
+    rework_required: true/false
+  }
+})
+```
+
+See `templates/agent-performance-schema.md` for full metrics schema.
+
+---
+
 ## Dynamic Agent Selection
 
 The crunch skill dynamically selects appropriate agents based on issue context. This enables specialized handling for security issues, infrastructure changes, and other domain-specific work.

@@ -155,6 +155,99 @@ Use a fast agent (Haiku) to create a brief summary:
 
 Launch 6 agents simultaneously using Task tool. Each agent reviews independently and returns a list of issues.
 
+### Execution Graph
+
+The review phase uses a formal execution graph for coordinated parallel execution:
+
+```json
+{
+  "graph_id": "REVIEW-{pr_number}",
+  "phase": "code_review",
+  "nodes": [
+    {"id": "r1", "agent": "claude-compliance", "priority": "NORMAL", "dependencies": []},
+    {"id": "r2", "agent": "bug-scanner", "priority": "HIGH", "dependencies": []},
+    {"id": "r3", "agent": "git-history", "priority": "NORMAL", "dependencies": []},
+    {"id": "r4", "agent": "previous-pr", "priority": "NORMAL", "dependencies": []},
+    {"id": "r5", "agent": "comment-checker", "priority": "NORMAL", "dependencies": []},
+    {"id": "r6", "agent": "test-quality", "priority": "HIGH", "dependencies": []},
+    {"id": "merge", "agent": "orchestrator", "priority": "NORMAL", "dependencies": ["r1","r2","r3","r4","r5","r6"]}
+  ],
+  "batches": [
+    {"batch_id": 1, "tasks": ["r1", "r2", "r3", "r4", "r5", "r6"]},
+    {"batch_id": 2, "tasks": ["merge"]}
+  ]
+}
+```
+
+### Execution Pattern
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Batch 1 (Parallel)                           │
+│  ┌───────────┐ ┌────────────┐ ┌────────────┐ ┌───────────────┐  │
+│  │ CLAUDE.md │ │ Bug Scanner│ │Git History │ │ Previous PR   │  │
+│  │ Compliance│ │   (r2)     │ │   (r3)     │ │ Reviewer (r4) │  │
+│  │   (r1)    │ │            │ │            │ │               │  │
+│  └─────┬─────┘ └──────┬─────┘ └──────┬─────┘ └───────┬───────┘  │
+│        │              │              │               │          │
+│        │       ┌──────────────┐  ┌───────────────┐   │          │
+│        │       │ Code Comment │  │ Test Quality  │   │          │
+│        │       │ Checker (r5) │  │ Reviewer (r6) │   │          │
+│        │       └──────┬───────┘  └───────┬───────┘   │          │
+│        │              │                  │           │          │
+└────────┼──────────────┼──────────────────┼───────────┼──────────┘
+         │              │                  │           │
+         ▼              ▼                  ▼           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Batch 2 (Sequential)                         │
+│                    ┌──────────────────┐                         │
+│                    │   Orchestrator   │                         │
+│                    │  Merge Findings  │                         │
+│                    └────────┬─────────┘                         │
+└─────────────────────────────┼───────────────────────────────────┘
+                              ▼
+                       Merged Results
+```
+
+### Conflict Detection
+
+After all reviewers complete, check for conflicting findings:
+
+```
+conflicts = detect_conflicts([r1..r6].findings)
+
+Types of conflicts:
+- Contradictory assessments (one says fix, another says correct)
+- Overlapping findings with different severities
+- Style recommendations that contradict
+
+Resolution:
+IF conflicts detected:
+  invoke_conflict_resolution(conflicts)
+  apply_resolution()
+ELSE:
+  proceed_to_scoring()
+```
+
+### Performance Tracking
+
+After review completes, update agent metrics:
+
+```
+for agent in [r1..r6]:
+  update_agent_metrics({
+    agent: agent.name,
+    domain: "review",
+    phase: "code_review",
+    outcome: agent.findings_count > 0 ? "found_issues" : "no_issues",
+    duration_ms: agent.elapsed_time,
+    quality_indicators: {
+      findings_validated: agent.findings_above_threshold,
+      false_positives: agent.findings_below_threshold
+    }
+  })
+```
+
 ### Agent #1: CLAUDE.md Compliance
 
 **Model**: Sonnet
