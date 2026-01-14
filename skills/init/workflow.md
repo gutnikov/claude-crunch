@@ -121,12 +121,15 @@ phases:
   5_generate_claude_md:
     status: pending
 
-  6_vault_mcp:
+  6_secret_setup:
     status: pending
     data:
-      installed: false
-      configured: false
-      tested: false
+      approach: null  # "vault" | "sops" | null
+      vault_installed: false
+      vault_tested: false
+      sops_installed: false
+      age_installed: false
+      age_public_key: null
 
   7_ci_mcp:
     status: pending
@@ -168,7 +171,7 @@ phases:
   11_verify_checklist:
     status: pending
     data:
-      vault_mcp_working: false
+      secret_setup_working: false  # Vault MCP or SOPS+age verified
       secrets_configured: false
       ci_mcp_working: false
       ci_config_ready: false
@@ -375,6 +378,19 @@ errors: []
    - Skip (no feature flags)
    ```
 
+3. **Secret Management Approach** (if any secrets defined)
+   ```
+   IF environment_variables contains any secret:yes entries:
+     AskUserQuestion: "How do you want to manage secrets?"
+
+     Header: "Secrets"
+     Options:
+     - Vault (HashiCorp Vault with MCP integration)
+     - SOPS (File-based encryption with age)
+   ELSE:
+     secret_approach = null (no secrets needed)
+   ```
+
 ### Parsing
 
 Parse structured data from responses:
@@ -401,9 +417,10 @@ FOR each line in feature_flags:
        data:
          environment_variables: [parsed list]
          feature_flags: [parsed list]
+         secret_approach: "vault" | "sops" | null
    ```
 
-2. Identify secrets for Phase 8:
+2. Identify secrets for Phase 9:
    ```
    secrets_needed = environment_variables.filter(v => v.secret == true)
    ```
@@ -531,8 +548,10 @@ Read and combine templates in this order:
 6. `6-ci.md`
 7. `6-ci-{platform}.md` (based on Phase 2 selection)
 8. `7-configuration.md`
-9. `8-deployment.md`
-10. `99-setup-checklist.md`
+9. `8-secret-management.md`
+10. `8-secrets-{approach}.md` (based on Phase 3 secret_approach selection)
+11. `9-deployment.md`
+12. `99-setup-checklist.md`
 
 ### Placeholder Replacement
 
@@ -599,7 +618,7 @@ defaults:
 ```
 ```
 
-### Deployment (8-deployment.md)
+### Deployment (9-deployment.md)
 
 Replace TEMPLATE sections with actual staging and production data.
 
@@ -643,25 +662,45 @@ Options:
 
 ---
 
-## Phase 6: Vault MCP Setup
+## Phase 6: Secret Management Setup
 
-**Purpose**: Install and configure Vault MCP server for secret management
+**Purpose**: Install and configure secret management tools (Vault MCP or SOPS+age)
 
-### Check Existing
+### Determine Approach
 
-First, check if Vault MCP is already installed:
+Based on Phase 3 secret_approach selection:
+- `vault` → Install Vault MCP server
+- `sops` → Set up SOPS with age encryption
+- `null` → Skip (no secrets defined)
+
+### Skip if No Secrets
+
 ```
-Try executing a vault MCP command (e.g., mcp__vault__status or similar)
-
-IF success:
-  Show: "Vault MCP is already installed and working!"
-  Mark phase as completed
+IF phases.3_configuration.data.secret_approach == null:
+  Show: "No secrets defined. Skipping secret management setup."
+  Mark phase as skipped
   Skip to Phase 7
 ```
 
-### Guide Installation
+---
 
-If not installed, show instructions:
+### Vault Approach
+
+#### Check Existing Vault MCP
+
+```
+IF secret_approach == "vault":
+  Try executing a vault MCP command (e.g., mcp__vault__status)
+
+  IF success:
+    Show: "Vault MCP is already installed and working!"
+    Mark phase as completed
+    Skip to Phase 7
+```
+
+#### Guide Vault Installation
+
+If Vault MCP not installed, show instructions:
 
 ```markdown
 To set up Vault MCP, you'll need to:
@@ -670,8 +709,6 @@ To set up Vault MCP, you'll need to:
    ```bash
    npm install -g @anthropic/vault-mcp
    ```
-
-   Or if using a specific Vault provider, check their MCP documentation.
 
 2. **Add to your Claude MCP configuration**
 
@@ -687,12 +724,10 @@ To set up Vault MCP, you'll need to:
    }
    ```
 
-3. **Restart Claude Code**
-
-   After configuring, you'll need to restart Claude to load the MCP server.
+3. **Restart Claude Code** to load the MCP server.
 ```
 
-### User Confirmation
+#### Vault User Confirmation
 
 ```
 AskUserQuestion: "Have you completed the Vault MCP installation?"
@@ -703,23 +738,103 @@ Options:
 - Help (show more details)
 ```
 
+---
+
+### SOPS Approach
+
+#### Check Existing SOPS Setup
+
+```
+IF secret_approach == "sops":
+  Check if sops and age are installed:
+    Run: sops --version
+    Run: age --version
+
+  IF both installed:
+    Show: "SOPS and age are already installed!"
+
+  Check if .sops.yaml exists:
+    IF exists: Show: "SOPS configuration found."
+```
+
+#### Guide SOPS Installation
+
+If SOPS/age not installed, show instructions:
+
+```markdown
+To set up SOPS with age encryption:
+
+1. **Install SOPS and age**
+   ```bash
+   # macOS
+   brew install sops age
+
+   # Linux - download from releases:
+   # https://github.com/getsops/sops/releases
+   # https://github.com/FiloSottile/age/releases
+   ```
+
+2. **Generate age key pair**
+   ```bash
+   mkdir -p ~/.config/sops/age
+   age-keygen -o ~/.config/sops/age/keys.txt
+   ```
+   Note your public key (starts with `age1...`)
+
+3. **Create .sops.yaml in project root**
+   ```yaml
+   creation_rules:
+     - path_regex: secrets/staging\.yaml$
+       age: age1your_staging_public_key...
+     - path_regex: secrets/production\.yaml$
+       age: age1your_production_public_key...
+   ```
+
+4. **Create secrets directory**
+   ```bash
+   mkdir -p secrets
+   ```
+```
+
+#### SOPS User Confirmation
+
+```
+AskUserQuestion: "Have you completed the SOPS setup?"
+
+Options:
+- Yes, SOPS and age are installed
+- Skip (I'll set up SOPS later)
+- Help (show more details)
+```
+
+#### SOPS Configuration
+
+If user confirms, collect age public key:
+
+```
+AskUserQuestion: "Enter your age public key (starts with age1...)"
+
+Header: "age key"
+
+Store in progress for .sops.yaml generation
+```
+
+---
+
 ### Verification
 
-If user says yes:
+For Vault:
 ```
 Try vault MCP command again
+IF success: Mark as verified
+IF fail: Show error, offer retry/skip
+```
 
-IF success:
-  Show: "Vault MCP verified and working!"
-  Mark phase as completed
-
-IF fail:
-  Show error message
-  AskUserQuestion: "Would you like to:"
-  Options:
-  - Retry verification
-  - Skip and continue
-  - See troubleshooting tips
+For SOPS:
+```
+Check sops --version and age --version
+IF success: Mark as verified
+IF fail: Show error, offer retry/skip
 ```
 
 ### Actions
@@ -727,17 +842,20 @@ IF fail:
 1. Update progress:
    ```yaml
    phases:
-     6_vault_mcp:
+     6_secret_setup:
        status: completed  # or skipped
        data:
-         installed: true/false
-         configured: true/false
-         tested: true/false
+         approach: "vault" | "sops" | null
+         vault_installed: true/false  # if vault
+         vault_tested: true/false     # if vault
+         sops_installed: true/false   # if sops
+         age_installed: true/false    # if sops
+         age_public_key: "age1..."    # if sops
    current_phase: 7
    last_updated: {now}
    ```
 
-2. **IMPORTANT**: If MCP was just installed, inform user:
+2. **IMPORTANT**: If Vault MCP was just installed, inform user:
    ```
    "MCP configuration changed. Please restart Claude Code and run /init again to continue."
    ```
@@ -1170,7 +1288,7 @@ Alertmanager:
 
 ## Phase 9: Configure Secrets
 
-**Purpose**: Set up required secrets in Vault
+**Purpose**: Set up required secrets using the selected approach (Vault or SOPS)
 
 ### Collect Secrets
 
@@ -1178,54 +1296,118 @@ Get secrets from Phase 3:
 ```
 secrets = phases.3_configuration.data.environment_variables
           .filter(v => v.secret == true)
+
+secret_approach = phases.3_configuration.data.secret_approach
 ```
 
-### Skip if No Vault
+### Skip if No Secrets
 
-If Vault MCP was skipped in Phase 6:
 ```
-Show: "Vault MCP was skipped. Secrets must be configured manually."
+IF secrets is empty OR secret_approach == null:
+  Show: "No secrets to configure."
+  Mark phase as completed
+  Skip to Phase 10
+```
+
+### Skip if Setup Skipped
+
+If secret management was skipped in Phase 6:
+```
+Show: "Secret management was skipped in Phase 6. Secrets must be configured manually."
 Show list of secrets that need configuration
 Mark phase as completed
-Skip to Phase 9
+Skip to Phase 10
 ```
 
-### For Each Secret
+---
+
+### Vault Approach
 
 ```
-FOR each secret in secrets:
+IF secret_approach == "vault":
+  FOR each secret in secrets:
+    Show:
+      "Please configure secret: {secret.name}
+
+      Path: secret/data/{project_name}/{environment}
+      Description: {secret.description}
+
+      Using Vault CLI:
+      vault kv put secret/{project_name}/staging {secret.name}='your_value'
+      vault kv put secret/{project_name}/production {secret.name}='your_value'
+
+      Or use the Vault MCP:
+      mcp__vault__write(path='secret/data/{project_name}/staging/{secret.name}', data={value: '...'})
+
+      Or use the Vault UI."
+
+    AskUserQuestion: "Have you configured this secret?"
+    Options:
+    - Yes, it's configured
+    - Skip this secret
+
+    IF yes:
+      Try to verify secret is readable via MCP (don't log actual value!)
+      IF readable: Add to secrets_configured
+      ELSE: Show warning, add to secrets_pending
+    ELSE:
+      Add to secrets_pending
+```
+
+---
+
+### SOPS Approach
+
+```
+IF secret_approach == "sops":
   Show:
-    "Please configure secret: {secret.name}
+    "Create encrypted secrets files for each environment.
 
-    Path: secret/data/{project_name}/{environment}
-    Description: {secret.description}
+    For staging, create secrets/staging.yaml with these secrets:
+    {list of secret names}
 
-    Using Vault CLI:
-    vault kv put secret/{project_name}/staging {secret.name}='your_value'
-    vault kv put secret/{project_name}/production {secret.name}='your_value'
+    For production, create secrets/production.yaml with these secrets:
+    {list of secret names}"
 
-    Or use the Vault UI to set these values."
+  Show:
+    "To create staging secrets file:
 
-  AskUserQuestion: "Have you configured this secret?"
+    1. Create the file:
+       sops secrets/staging.yaml
+
+    2. Add secrets in YAML format:
+       DATABASE_URL: postgresql://user:password@host:5432/db
+       API_KEY: your-api-key-here
+       ...
+
+    3. Save and close - SOPS will encrypt automatically."
+
+  AskUserQuestion: "Have you created the encrypted secrets files?"
   Options:
-  - Yes, it's configured
-  - Skip this secret
+  - Yes, secrets files created
+  - Skip (I'll create them later)
 
   IF yes:
-    Try to verify secret is readable (don't log actual value!)
-    IF readable:
-      Add to secrets_configured list
+    Check if secrets/staging.yaml exists
+    Check if secrets/production.yaml exists
+    IF both exist:
+      Try to decrypt and verify keys match expected secrets
+      Add found secrets to secrets_configured
+      Add missing secrets to secrets_pending
     ELSE:
-      Show warning, add to secrets_pending list
+      Show warning about missing files
+      Add all to secrets_pending
   ELSE:
-    Add to secrets_pending list
+    Add all to secrets_pending
 ```
+
+---
 
 ### Summary
 
 ```
 Show:
-  "Secrets Summary:
+  "Secrets Summary ({secret_approach}):
    - Configured: {count} ({list})
    - Pending: {count} ({list})
 
@@ -1237,12 +1419,13 @@ Show:
 1. Update progress:
    ```yaml
    phases:
-     8_secrets:
+     9_secrets:
        status: completed  # or partial
        data:
+         approach: "vault" | "sops"
          secrets_configured: [list]
          secrets_pending: [list]
-   current_phase: 9
+   current_phase: 10
    last_updated: {now}
    ```
 
@@ -1341,14 +1524,20 @@ This will:
 
 ### Check Each Item
 
-1. **Vault MCP installed and working**
+1. **Secret management configured** (Vault or SOPS)
    ```
-   IF phases.6_vault_mcp.data.tested == true:
-     Try vault command
-     IF success: PASS
+   IF phases.6_secret_setup.data.approach == "vault":
+     IF phases.6_secret_setup.data.vault_tested == true:
+       Try vault MCP command
+       IF success: PASS
+       ELSE: FAIL
      ELSE: FAIL
-   ELSE IF phases.6_vault_mcp.status == skipped:
-     SKIP (note: manual management)
+   ELSE IF phases.6_secret_setup.data.approach == "sops":
+     Check sops --version and age --version
+     IF both work: PASS
+     ELSE: FAIL
+   ELSE IF phases.6_secret_setup.status == skipped:
+     SKIP (note: manual management or no secrets)
    ELSE:
      FAIL
    ```
@@ -1497,7 +1686,7 @@ Show:
      11_verify_checklist:
        status: completed
        data:
-         vault_mcp_working: true/false
+         secret_setup_working: true/false  # Vault MCP or SOPS+age
          secrets_configured: true/false
          ci_mcp_working: true/false
          ci_config_ready: true/false
@@ -1579,7 +1768,10 @@ All templates are in the plugin's `templates/` directory (relative to plugin roo
 | `6-ci-gitea.md` | Gitea reference | Include if platform=gitea |
 | `6-ci-filebase.md` | Filebase reference | Include if platform=filebase |
 | `7-configuration.md` | Config management | Fill in env vars and feature flags |
-| `8-deployment.md` | Deployment procedures | Fill in staging/prod details |
+| `8-secret-management.md` | Secret management overview | Keep selected approach row only |
+| `8-secrets-vault.md` | Vault reference | Include if secret_approach=vault |
+| `8-secrets-sops.md` | SOPS reference | Include if secret_approach=sops |
+| `9-deployment.md` | Deployment procedures | Fill in staging/prod details |
 | `99-setup-checklist.md` | Setup verification | Update with [x] marks |
 
 ### Placeholder Map

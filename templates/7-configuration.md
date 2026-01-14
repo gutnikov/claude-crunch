@@ -90,47 +90,13 @@ log_level: warn
 output_dir: /var/lib/app/production
 ```
 
-### Secret Precedence (Vault)
+### Secret Management
 
-Secrets follow a **clear precedence** — you can always trace where a value comes from.
+> **See [Secret Management section](#secret-management-1) for detailed secret handling.**
 
-```
-Vault (highest) → Environment variable → Ansible group_vars (lowest)
-```
-
-| Precedence | Source                | Use Case                   |
-| ---------- | --------------------- | -------------------------- |
-| 1 (high)   | Vault                 | Production secrets         |
-| 2          | Environment variables | CI/CD injection, local dev |
-| 3 (low)    | Ansible group_vars    | Non-sensitive defaults     |
-
-#### Vault Integration
-
-```yaml
-# deploy/ansible/group_vars/all/main.yml
-# Vault paths for secrets lookup
-vault_addr: "https://vault.example.com"
-vault_secrets_path: "secret/data/app/{{ env }}"
-
-# In playbook/role - lookup from Vault
-db_password: "{{ lookup('hashi_vault', 'secret=secret/data/app/{{ env }}:db_password') }}"
-api_key: "{{ lookup('hashi_vault', 'secret=secret/data/app/{{ env }}:api_key') }}"
-```
-
-#### What NOT to Do
-
-```yaml
-# ❌ DON'T: Commit secrets to repo
-db_password: "actual-password-here"
-
-# ❌ DON'T: Duplicate secrets across files
-# staging/secrets.yml AND production/secrets.yml with same keys
-
-# ❌ DON'T: Edit generated config on server
-ssh server "vim /etc/app/config.yaml"  # NO!
-
-# ✅ DO: Change source → commit → redeploy
-```
+Secrets are managed separately from configuration. Choose your secret management approach:
+- **Vault** - Enterprise-grade centralized secret management
+- **SOPS+age** - File-based encryption for simpler setups
 
 ### Environment Variables
 

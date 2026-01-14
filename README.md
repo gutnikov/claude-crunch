@@ -151,7 +151,10 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 | `6-ci-gitea.md` | Gitea MCP reference |
 | `6-ci-filebase.md` | File-based CI reference (no MCP required) |
 | `7-configuration.md` | Environment variables and feature flags |
-| `8-deployment.md` | Staging and production deployment |
+| `8-secret-management.md` | Secret management approach selection |
+| `8-secrets-vault.md` | Vault MCP reference |
+| `8-secrets-sops.md` | SOPS+age reference (file-based encryption) |
+| `9-deployment.md` | Staging and production deployment |
 | `99-setup-checklist.md` | Setup verification checklist |
 
 ### Orchestration Templates

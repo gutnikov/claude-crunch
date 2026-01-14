@@ -15,6 +15,7 @@ Set up the ci-filebase directory structure (run once per project):
 ```
 
 Creates:
+
 - `.claude/ci-filebase/issues/` - Issue storage
 - `.claude/ci-filebase/prs/` - PR storage
 - `.claude/ci-filebase/labels.json` - Default labels
@@ -205,32 +206,32 @@ make
 
 ### Issue Management
 
-| Action        | Command                                |
-| ------------- | -------------------------------------- |
-| Initialize    | `/ci-filebase init`                    |
-| Get labels    | `/ci-filebase labels`                  |
-| Read issue    | `/ci-filebase issue get {id}`          |
-| Create issue  | `/ci-filebase issue create "{title}"`  |
-| Update issue  | `/ci-filebase issue update {id}`       |
-| Close issue   | `/ci-filebase issue close {id}`        |
-| Change state  | `/ci-filebase issue label {id} {labels}` |
-| Add comment   | `/ci-filebase issue comment {id} "{text}"` |
-| List issues   | `/ci-filebase issue list`              |
+| Action       | Command                                    |
+| ------------ | ------------------------------------------ |
+| Initialize   | `/ci-filebase init`                        |
+| Get labels   | `/ci-filebase labels`                      |
+| Read issue   | `/ci-filebase issue get {id}`              |
+| Create issue | `/ci-filebase issue create "{title}"`      |
+| Update issue | `/ci-filebase issue update {id}`           |
+| Close issue  | `/ci-filebase issue close {id}`            |
+| Change state | `/ci-filebase issue label {id} {labels}`   |
+| Add comment  | `/ci-filebase issue comment {id} "{text}"` |
+| List issues  | `/ci-filebase issue list`                  |
 
 ### Pull Request Management
 
 | Action    | Command                                |
 | --------- | -------------------------------------- |
-| Create PR | `/ci-filebase pr create --title "..."`  |
-| Get PR    | `/ci-filebase pr get {id}`              |
-| List PRs  | `/ci-filebase pr list`                  |
-| Merge PR  | `/ci-filebase pr merge {id}`            |
-| Review PR | `/ci-filebase pr review {id}`           |
+| Create PR | `/ci-filebase pr create --title "..."` |
+| Get PR    | `/ci-filebase pr get {id}`             |
+| List PRs  | `/ci-filebase pr list`                 |
+| Merge PR  | `/ci-filebase pr merge {id}`           |
+| Review PR | `/ci-filebase pr review {id}`          |
 
 ### File Storage
 
-| Resource | Location                              |
-| -------- | ------------------------------------- |
+| Resource | Location                               |
+| -------- | -------------------------------------- |
 | Issues   | `.claude/ci-filebase/issues/{id}.json` |
 | PRs      | `.claude/ci-filebase/prs/{id}.json`    |
 | Labels   | `.claude/ci-filebase/labels.json`      |
@@ -240,11 +241,11 @@ make
 
 ## Comparison with MCP-based CI
 
-| Feature | GitHub/GitLab/Gitea MCP | File-based CI |
-|---------|------------------------|---------------|
-| Issue tracking | Remote API | Local JSON files |
-| PR management | Remote API | Local JSON files |
-| CI/CD pipelines | Automated | Manual scripts |
-| Collaboration | Multi-user | Single-user |
-| Offline support | Requires network | Fully offline |
-| Setup complexity | MCP + tokens | Zero config |
+| Feature          | GitHub/GitLab/Gitea MCP | File-based CI    |
+| ---------------- | ----------------------- | ---------------- |
+| Issue tracking   | Remote API              | Local JSON files |
+| PR management    | Remote API              | Local JSON files |
+| CI/CD pipelines  | Automated               | Manual scripts   |
+| Collaboration    | Multi-user              | Single-user      |
+| Offline support  | Requires network        | Fully offline    |
+| Setup complexity | MCP + tokens            | Zero config      |

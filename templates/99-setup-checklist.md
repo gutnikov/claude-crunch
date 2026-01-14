@@ -10,9 +10,29 @@
 
 ### Secrets Management
 
+> **Note:** Choose either Vault (MCP-based) OR SOPS (file-based encryption) below.
+
+#### Vault (HashiCorp Vault with MCP)
+
 - [ ] Vault MCP installed and working
-- [ ] Vault MCP health check passed
-- [ ] All required secrets configured
+- [ ] Vault MCP health check passed (`mcp__vault__status`)
+- [ ] Vault paths created for project (`secret/{project}/staging`, `secret/{project}/production`)
+- [ ] All required secrets configured in Vault
+- [ ] Ansible vault lookup configured
+
+#### SOPS (File-based encryption with age)
+
+> **Note:** Use SOPS for projects without Vault infrastructure. Secrets are stored as encrypted files.
+
+- [ ] SOPS installed (`sops --version`)
+- [ ] age installed (`age --version`)
+- [ ] age key pair generated (`~/.config/sops/age/keys.txt`)
+- [ ] `.sops.yaml` configuration created
+- [ ] `secrets/` directory created
+- [ ] `secrets/staging.yaml` encrypted file created
+- [ ] `secrets/production.yaml` encrypted file created
+- [ ] All required secrets added to encrypted files
+- [ ] Test decryption works (`sops --decrypt secrets/staging.yaml`)
 
 ### CI/CD Integration
 
