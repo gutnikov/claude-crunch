@@ -7,7 +7,7 @@
 ```
 KE-{type}-{YYYYMMDD}-{hash}
 
-type: decision | resolution | pattern | feedback
+type: decision | resolution | pattern | feedback | incident | remediation_pattern
 hash: first 4 chars of SHA-256 of content
 ```
 
@@ -25,14 +25,32 @@ hash: first 4 chars of SHA-256 of content
       "decision": 0,
       "resolution": 0,
       "pattern": 0,
-      "feedback": 0
+      "feedback": 0,
+      "incident": 0,
+      "remediation_pattern": 0
     },
     "by_domain": {}
   },
   "entries": [],
   "tag_index": {},
   "issue_index": {},
-  "agent_metrics": {}
+  "agent_metrics": {},
+  "remediation_metrics": {
+    "total_attempts": 0,
+    "successful": 0,
+    "failed": 0,
+    "by_action": {
+      "restart_pod": { "attempts": 0, "success": 0 },
+      "flush_cache": { "attempts": 0, "success": 0 },
+      "reload_config": { "attempts": 0, "success": 0 }
+    },
+    "by_anomaly_type": {
+      "error_spike": { "attempts": 0, "transient": 0, "bug": 0 },
+      "latency_regression": { "attempts": 0, "transient": 0, "bug": 0 },
+      "new_exception": { "attempts": 0, "transient": 0, "bug": 0 },
+      "memory_growth": { "attempts": 0, "transient": 0, "bug": 0 }
+    }
+  }
 }
 ```
 
@@ -171,6 +189,103 @@ All entries share this base structure:
     "remediation_applied": false,
     "similar_findings_count": 0,
     "may_become_pattern": false
+  }
+}
+```
+
+### Staging Incident Entry
+
+Records staging validation failures for future pattern matching.
+
+```json
+{
+  "id": "KE-incident-20250114-e5f6",
+  "type": "incident",
+  "content": {
+    "issue_ref": "#42",
+    "environment": "staging",
+    "phase": "validation",
+    "cycle": "3 of 4",
+    "anomalies": [
+      {
+        "type": "error_spike | latency_regression | new_exception | memory_growth",
+        "current_value": "5.2/min",
+        "baseline_value": "0.1/min",
+        "threshold": "0.3/min",
+        "severity": "CRITICAL | HIGH | MEDIUM"
+      }
+    ],
+    "symptoms": {
+      "error_pattern": "NullPointerException in AuthService",
+      "stack_trace": "Truncated stack trace",
+      "affected_endpoints": ["/api/auth/validate"],
+      "log_samples": ["Sample log lines"]
+    },
+    "diagnosis": {
+      "classification": "transient | likely_transient | likely_bug | bug",
+      "confidence": 92,
+      "root_cause": "Connection pool exhaustion after deploy",
+      "affected_components": ["AuthService", "DatabasePool"]
+    },
+    "remediation": {
+      "attempted": true,
+      "action": "restart_pod",
+      "success": true,
+      "duration_seconds": 45,
+      "metrics_before": {
+        "error_rate": 5.2,
+        "latency_p99": 500,
+        "memory_mb": 512
+      },
+      "metrics_after": {
+        "error_rate": 0.15,
+        "latency_p99": 120,
+        "memory_mb": 280
+      }
+    },
+    "outcome": "resolved_by_remediation | returned_to_implementing | investigation_needed",
+    "resolution_type": "transient | bug_fix | unknown"
+  }
+}
+```
+
+### Remediation Pattern Entry
+
+Records successful remediation patterns for matching future incidents.
+
+```json
+{
+  "id": "KE-remediation-20250114-f7g8",
+  "type": "remediation_pattern",
+  "content": {
+    "name": "Cold Start Connection Pool Exhaustion",
+    "anomaly_signature": {
+      "type": "error_spike",
+      "error_patterns": ["ConnectionPoolExhausted", "timeout acquiring connection"],
+      "timing": "within 5 minutes of deploy",
+      "affected_components": ["database", "connection pool"]
+    },
+    "classification": "transient",
+    "recommended_action": "restart_pod",
+    "success_rate": {
+      "total_attempts": 12,
+      "successful": 11,
+      "failed": 1,
+      "rate": 0.917
+    },
+    "typical_resolution_time": "2-3 minutes",
+    "when_to_use": [
+      "Error spike immediately after deploy",
+      "Connection-related errors",
+      "Errors decrease over time"
+    ],
+    "when_not_to_use": [
+      "Errors persist after restart",
+      "Stack trace shows application code bug",
+      "Memory growing linearly"
+    ],
+    "related_incidents": ["KE-incident-20250110-a1b2", "KE-incident-20250112-c3d4"],
+    "last_successful": "2025-01-14T10:30:00Z"
   }
 }
 ```

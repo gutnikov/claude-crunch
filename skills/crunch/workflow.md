@@ -505,6 +505,10 @@ Update issue body:
 
 **Purpose**: Verify the DoD checklist on staging before proceeding.
 
+**Environment**: Staging ONLY. This phase never touches production.
+
+**Duration**: Time-bounded. Default 20 minutes for continuous monitoring.
+
 ### Execute DoD Checklist
 
 Go through each item in the DoD checklist:
@@ -524,11 +528,434 @@ Go through each item in the DoD checklist:
    - Test related functionality
    - Verify no performance issues
 
+### Continuous Monitoring (Post-Deploy)
+
+After initial DoD checks pass, monitor staging for a bounded period to catch issues that emerge under load or over time.
+
+**Scope and Limits**:
+- Environment: Staging only
+- Duration: 20 minutes (configurable)
+- Interval: 5 minutes between checks
+- Max cycles: 4 (duration / interval)
+- Purpose: Catch deployment issues before they reach production
+
+```
+Parameters:
+  duration: 20m        # Total monitoring window
+  interval: 5m         # Time between checks
+  max_cycles: 4        # duration / interval
+
+Execution:
+  baseline = capture_metrics()  # Error rate, P99, memory at start
+
+  for cycle in 1..max_cycles:
+
+    # 1. Fetch current state
+    current = fetch_metrics_and_logs(last={interval})
+
+    # 2. Compare to baseline
+    anomalies = detect_anomalies(baseline, current)
+
+    # 3. Report cycle
+    log_cycle_status(cycle, max_cycles, anomalies)
+
+    # 4. Handle anomalies (if any)
+    if anomalies:
+      result = handle_staging_anomaly(anomalies)
+
+      if result == RESOLVED:
+        # Transient issue, continue monitoring
+        continue
+
+      if result == NEEDS_FIX:
+        # Real bug found, return to IMPLEMENTING
+        update_issue_with_diagnosis(anomalies)
+        transition_to(IMPLEMENTING)
+        return  # Exit monitoring
+
+    # 5. Sleep until next cycle (if not last)
+    if cycle < max_cycles:
+      sleep(interval)
+
+  # All cycles complete, no unresolved issues
+  log("Monitoring complete - staging healthy")
+  proceed_to(DOCS)
+```
+
+**Monitoring Thresholds** (more sensitive than standard patrol):
+
+| Metric | Warning | Critical |
+|--------|---------|----------|
+| Error rate | 1.5x baseline | 3x baseline |
+| P99 latency | 30% increase | 50% increase |
+| New exceptions | 3 occurrences | 10 occurrences |
+| Memory growth | 10% increase | 25% increase |
+
+**Skip Conditions**:
+- No observability infrastructure configured
+- User explicitly skips with flag
+- Hotfix/emergency deployment
+
+### Staging Anomaly Handling
+
+When an anomaly is detected during monitoring, determine if it's a transient issue (fixable via restart) or a real bug (needs code fix).
+
+```
+handle_staging_anomaly(anomalies):
+
+  # 1. Classify the anomaly
+  for anomaly in anomalies:
+    anomaly.type = classify(anomaly)
+    # Types: error_spike, latency_regression, new_exception, memory_growth
+
+  # 2. Invoke incident-responder agent for diagnosis
+  diagnosis = invoke_agent("incident-responder", {
+    anomalies: anomalies,
+    context: "staging_validation",
+    issue_number: current_issue
+  })
+
+  # 3. Query knowledge base for similar staging issues
+  similar = query_knowledge_base(
+    type: "resolution",
+    context: "staging",
+    symptoms: anomalies.map(a => a.description)
+  )
+
+  # 4. Determine if this is a known transient issue
+  if similar.exists and similar.confidence >= 90%:
+    if similar.resolution_type == "transient":
+      # Known transient issue (e.g., cold start, cache warm-up)
+
+      # 4a. Check remediation playbook for allowed action
+      action = get_playbook_action(anomalies, similar.recommended_action)
+
+      if action:
+        # 4b. Try quick remediation
+        success = try_staging_remediation(action)
+
+        if success:
+          log("Transient issue resolved via {action}")
+          record_remediation_success(similar, action)
+          return RESOLVED
+        else:
+          # Remediation didn't help - it's a real bug
+          log("Remediation failed - escalating to code fix")
+          return NEEDS_FIX
+
+  # 5. Unknown issue or low confidence - assume it's a bug
+  log("No confident match - treating as bug requiring fix")
+  return NEEDS_FIX
+```
+
+### Staging Remediation Actions
+
+Limited set of actions for staging transient issues only. These are NOT production fixes.
+
+| Action | When to Use | Command | Timeout |
+|--------|-------------|---------|---------|
+| `restart_pod` | Memory leak symptoms, stuck process | `kubectl rollout restart deployment/{name} -n staging` | 60s |
+| `restart_container` | Container-level issues | `docker restart {container_id}` | 30s |
+| `flush_cache` | Stale data, cache corruption | Service-specific (Redis FLUSHDB, app cache endpoint) | 30s |
+| `reload_config` | Config not picked up after deploy | `kill -HUP {pid}` or service reload endpoint | 15s |
+
+**What remediation is NOT for**:
+- Fixing actual bugs (that's IMPLEMENTING phase)
+- Production issues (out of scope for /crunch)
+- Anything requiring code changes
+- Deployment rollbacks (investigate instead)
+
+**Remediation limits**:
+- Max 1 attempt per anomaly type per monitoring window
+- 2-minute wait after remediation to observe effect
+- If not resolved after 1 attempt → it's a real bug, not transient
+
+```
+try_staging_remediation(action):
+
+  # 1. Pre-remediation snapshot
+  before = capture_metrics()
+  log("Attempting remediation: {action.type}")
+
+  # 2. Execute action
+  result = execute_action(action)
+
+  if result.failed:
+    log("Remediation action failed: {result.error}")
+    return false
+
+  # 3. Wait for stabilization
+  sleep(2 minutes)
+
+  # 4. Post-remediation check
+  after = capture_metrics()
+
+  # 5. Compare
+  resolved = (
+    after.error_rate <= before.baseline * 1.5 and
+    after.new_exceptions == 0 and
+    after.latency_p99 <= before.baseline_latency * 1.3
+  )
+
+  # 6. Record outcome for knowledge base
+  record_remediation_attempt({
+    action: action.type,
+    anomaly: action.anomaly_type,
+    before: before,
+    after: after,
+    success: resolved
+  })
+
+  return resolved
+```
+
+### Updating Issue on Validation Failure
+
+When monitoring detects an issue that needs a code fix, update the CURRENT issue (never create a new one) and return to IMPLEMENTING.
+
+```
+update_issue_with_diagnosis(anomalies):
+
+  # Get diagnosis from incident-responder agent
+  diagnosis = get_diagnosis()
+
+  # Append to issue body
+  append_to_issue(current_issue):
+    """
+    ---
+
+    ### Staging Validation Failed
+
+    **Detected During**: Continuous monitoring (cycle {cycle}/{max_cycles})
+    **Timestamp**: {timestamp}
+    **Environment**: staging
+
+    #### Anomalies Detected
+
+    | Type | Current | Baseline | Threshold |
+    |------|---------|----------|-----------|
+    {for each anomaly}
+    | {type} | {value} | {baseline} | {threshold} |
+
+    #### Log Samples
+
+    ```
+    {relevant_error_logs, max 20 lines}
+    ```
+
+    #### Stack Trace (if available)
+
+    ```
+    {stack_trace}
+    ```
+
+    #### Metrics Snapshot
+
+    - Error rate: {rate}/min (baseline: {baseline}/min)
+    - P99 latency: {latency}ms (baseline: {baseline_latency}ms)
+    - Memory: {memory}MB (baseline: {baseline_memory}MB)
+
+    #### Remediation Attempted
+
+    {if remediation_attempted}
+    - Action: {action}
+    - Result: Failed - issue persists
+    - Conclusion: This is a code bug, not a transient issue
+    {else}
+    - No remediation attempted (no confident match in knowledge base)
+    {endif}
+
+    #### Diagnosis
+
+    {diagnosis.summary}
+
+    **Likely root cause**: {diagnosis.root_cause}
+
+    **Affected components**: {diagnosis.components}
+
+    #### Recommended Fix
+
+    {diagnosis.recommended_fix}
+
+    **Files to investigate**:
+    {for each file in diagnosis.files}
+    - `{file.path}`: {file.reason}
+
+    ---
+
+    **Action Required**: Fix the issue and re-run validation.
+    """
+
+  # Update labels - return to IMPLEMENTING
+  remove_label("state:validation")
+  add_label("state:implementing")
+
+  # Record in knowledge base for future reference
+  invoke_skill("/learn", {
+    type: "resolution",
+    issue: current_issue,
+    status: "failed",
+    phase: "validation",
+    anomalies: anomalies,
+    diagnosis: diagnosis
+  })
+
+  # Notify user
+  show:
+    "Validation failed - bug detected on staging.
+
+    Issue #{current_issue} has been updated with:
+    - Error logs and stack traces
+    - Metrics snapshot
+    - Diagnosis and recommended fix
+
+    Returning to IMPLEMENTING phase.
+    Please fix the issue and re-deploy to staging."
+```
+
+### Monitoring Output Format
+
+**Success case:**
+
+```
+Continuous Monitoring - VALIDATION Phase
+========================================
+Environment: staging
+Issue: #{issue_number}
+Duration: 20 minutes (4 cycles)
+Started: {timestamp}
+
+Baseline captured:
+  - Error rate: 0.1/min
+  - P99 latency: 120ms
+  - Memory: 256MB
+
+Cycle 1/4 [{timestamp}]:
+  ✓ Error rate: 0.12/min (baseline: 0.1/min) - OK
+  ✓ P99 latency: 118ms (baseline: 120ms) - OK
+  ✓ Memory: 258MB (baseline: 256MB) - OK
+  Status: HEALTHY
+  Next check in 5 minutes...
+
+Cycle 2/4 [{timestamp}]:
+  ⚠ Error rate: 2.5/min (baseline: 0.1/min) - SPIKE
+  ✓ P99 latency: 125ms - OK
+  ✓ Memory: 260MB - OK
+  Status: ANOMALY DETECTED
+
+  Invoking incident-responder for diagnosis...
+  Checking knowledge base for similar issues...
+
+  Found: Issue #42 (similarity: 92%)
+    Description: "Cold start errors after deploy"
+    Resolution: restart_pod (success rate: 8/9)
+    Classification: transient
+
+  Attempting remediation: restart_pod
+  Executing: kubectl rollout restart deployment/myapp -n staging
+  Waiting 2 minutes for stabilization...
+
+  Post-remediation check:
+  ✓ Error rate: 0.15/min - RESOLVED
+
+  Transient issue resolved. Continuing monitoring...
+
+Cycle 3/4 [{timestamp}]:
+  ✓ All metrics healthy
+  Status: HEALTHY
+
+Cycle 4/4 [{timestamp}]:
+  ✓ All metrics healthy
+  Status: HEALTHY
+
+========================================
+Monitoring Complete
+Duration: 20 minutes
+Result: PASSED
+
+Summary:
+  - Cycles completed: 4/4
+  - Anomalies detected: 1
+  - Auto-resolved (transient): 1
+  - Bugs found: 0
+
+Proceeding to DOCS phase.
+```
+
+**Failure case:**
+
+```
+Continuous Monitoring - VALIDATION Phase
+========================================
+Environment: staging
+Issue: #{issue_number}
+Duration: 20 minutes (4 cycles)
+Started: {timestamp}
+
+Baseline captured:
+  - Error rate: 0.1/min
+  - P99 latency: 120ms
+  - Memory: 256MB
+
+Cycle 1/4 [{timestamp}]:
+  ✓ All metrics healthy
+  Status: HEALTHY
+
+Cycle 2/4 [{timestamp}]:
+  ✓ All metrics healthy
+  Status: HEALTHY
+
+Cycle 3/4 [{timestamp}]:
+  ✗ New exception: NullPointerException in AuthService.validateToken()
+  ✗ Error rate: 5.2/min (baseline: 0.1/min) - CRITICAL
+  ✓ P99 latency: 180ms - WARNING
+  Status: ANOMALY DETECTED
+
+  Invoking incident-responder for diagnosis...
+  Checking knowledge base for similar issues...
+
+  No confident match found (best: 45% similarity)
+  Classification: likely_bug (not transient)
+
+  Attempting remediation anyway: restart_pod
+  Executing: kubectl rollout restart deployment/myapp -n staging
+  Waiting 2 minutes for stabilization...
+
+  Post-remediation check:
+  ✗ Error rate: 4.8/min - NOT RESOLVED
+  ✗ Same exception still occurring
+
+  Remediation unsuccessful. This requires a code fix.
+
+========================================
+Monitoring Stopped Early
+Duration: 12 minutes (stopped at cycle 3)
+Result: FAILED - Bug detected
+
+Updating issue #{issue_number} with diagnosis...
+  ✓ Added error logs and stack traces
+  ✓ Added metrics snapshot
+  ✓ Added diagnosis: NullPointerException in token validation
+  ✓ Added recommended fix: Check null token before validation
+
+Returning to IMPLEMENTING phase.
+
+Action Required:
+  1. Review the diagnosis added to issue #{issue_number}
+  2. Fix the NullPointerException in AuthService
+  3. Re-deploy to staging
+  4. Run validation again
+```
+
 ### Update Issue Body
 
-Check off items as verified:
+After successful validation:
+
 ```markdown
 ### Validation Status
+
+**Environment**: staging
+**Validation Date**: {timestamp}
 
 **Infrastructure**:
 - [x] App on staging is running successfully
@@ -538,9 +965,21 @@ Check off items as verified:
 
 **Functional**:
 - [x] {Specific check 1}
-- [ ] {Specific check 2} ← FAILED: {reason}
+- [x] {Specific check 2}
 
-**Status**: {Validation Passed|Validation Failed}
+**Continuous Monitoring** (20 minutes):
+- [x] Monitoring window completed
+- [x] No persistent error rate spikes
+- [x] No latency regressions
+- [x] No unresolved exceptions
+
+**Auto-Remediation** (if any):
+- [x] Transient issue detected at cycle 2
+- [x] Action: restart_pod
+- [x] Result: Resolved
+- [x] Classification: Cold start (known transient)
+
+**Status**: Validation Passed
 ```
 
 ---

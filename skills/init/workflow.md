@@ -135,26 +135,47 @@ phases:
       configured: false
       tested: false
 
-  8_secrets:
+  8_observability_mcp:
+    status: pending
+    data:
+      prometheus:
+        url: null
+        installed: false
+        tested: false
+      loki:
+        url: null
+        installed: false
+        tested: false
+      alertmanager:
+        url: null
+        installed: false
+        tested: false
+      skipped: false
+
+  9_secrets:
     status: pending
     data:
       secrets_configured: []
       secrets_pending: []
 
-  9_setup_ci_issue:
+  10_setup_ci_issue:
     status: pending
     data:
       issue_number: null
       issue_url: null
       final_state: null
 
-  10_verify_checklist:
+  11_verify_checklist:
     status: pending
     data:
       vault_mcp_working: false
       secrets_configured: false
       ci_mcp_working: false
       ci_config_ready: false
+      observability_configured: false
+      prometheus_working: false
+      loki_working: false
+      alertmanager_working: false
       setup_issue_created: false
       setup_issue_crunched: false
 
@@ -867,7 +888,261 @@ Same as Phase 6 - verify, retry, or skip.
 
 ---
 
-## Phase 8: Configure Secrets
+## Phase 8: Observability MCP Setup
+
+**Purpose**: Configure MCP servers for Prometheus, Loki, and Alertmanager to enable `/patrol` and VALIDATION continuous monitoring.
+
+### Determine Need
+
+```
+AskUserQuestion: "Do you have observability infrastructure (Prometheus, Loki, Alertmanager)?"
+
+Header: "Observability"
+Options:
+- Yes, I have existing infrastructure
+- No, I'll set it up later
+- Skip (not needed for this project)
+```
+
+IF "Skip" or "No, I'll set it up later":
+```
+Show: "Observability MCPs skipped. The following features will be limited:"
+  - /patrol --logs: Unavailable
+  - /patrol --metrics: Unavailable
+  - VALIDATION continuous monitoring: Unavailable
+  - /patrol --code and /patrol --deps: Still work
+
+Mark phase as skipped
+Skip to Phase 9
+```
+
+### Collect Infrastructure URLs
+
+IF user has existing infrastructure:
+
+1. **Prometheus URL**
+   ```
+   AskUserQuestion: "What is your Prometheus server URL?"
+
+   Header: "Prometheus"
+   Example: http://prometheus.your-infra.local:9090
+   ```
+
+2. **Loki URL**
+   ```
+   AskUserQuestion: "What is your Loki server URL?"
+
+   Header: "Loki"
+   Example: http://loki.your-infra.local:3100
+   ```
+
+3. **Alertmanager URL**
+   ```
+   AskUserQuestion: "What is your Alertmanager server URL?"
+
+   Header: "Alertmanager"
+   Example: http://alertmanager.your-infra.local:9093
+   ```
+
+### Guide MCP Installation
+
+For each observability tool, guide installation:
+
+#### Prometheus MCP
+
+```markdown
+To set up Prometheus MCP:
+
+1. **Install the MCP server**
+   ```bash
+   npm install -g @anthropic/mcp-server-prometheus
+   ```
+
+2. **Add to Claude MCP configuration** (`.claude/mcp.json`):
+   ```json
+   {
+     "mcpServers": {
+       "prometheus": {
+         "command": "mcp-server-prometheus",
+         "args": [],
+         "env": {
+           "PROMETHEUS_URL": "{prometheus_url}"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Verify connectivity**:
+   ```bash
+   curl -s {prometheus_url}/-/healthy
+   curl -s '{prometheus_url}/api/v1/query?query=up'
+   ```
+```
+
+#### Loki MCP
+
+```markdown
+To set up Loki MCP:
+
+1. **Install the MCP server**
+   ```bash
+   npm install -g @anthropic/mcp-server-loki
+   ```
+
+2. **Add to Claude MCP configuration** (`.claude/mcp.json`):
+   ```json
+   {
+     "mcpServers": {
+       "loki": {
+         "command": "mcp-server-loki",
+         "args": [],
+         "env": {
+           "LOKI_URL": "{loki_url}"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Verify connectivity**:
+   ```bash
+   curl -s {loki_url}/ready
+   ```
+```
+
+#### Alertmanager MCP
+
+```markdown
+To set up Alertmanager MCP:
+
+1. **Install the MCP server**
+   ```bash
+   npm install -g @anthropic/mcp-server-alertmanager
+   ```
+
+2. **Add to Claude MCP configuration** (`.claude/mcp.json`):
+   ```json
+   {
+     "mcpServers": {
+       "alertmanager": {
+         "command": "mcp-server-alertmanager",
+         "args": [],
+         "env": {
+           "ALERTMANAGER_URL": "{alertmanager_url}"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Verify connectivity**:
+   ```bash
+   curl -s {alertmanager_url}/-/healthy
+   ```
+```
+
+### Combined MCP Configuration
+
+Show combined configuration for `.claude/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "prometheus": {
+      "command": "mcp-server-prometheus",
+      "args": [],
+      "env": {
+        "PROMETHEUS_URL": "{prometheus_url}"
+      }
+    },
+    "loki": {
+      "command": "mcp-server-loki",
+      "args": [],
+      "env": {
+        "LOKI_URL": "{loki_url}"
+      }
+    },
+    "alertmanager": {
+      "command": "mcp-server-alertmanager",
+      "args": [],
+      "env": {
+        "ALERTMANAGER_URL": "{alertmanager_url}"
+      }
+    }
+  }
+}
+```
+
+### User Confirmation
+
+```
+AskUserQuestion: "Have you installed and configured the observability MCPs?"
+
+Options:
+- Yes, all configured
+- Some configured (specify which)
+- Skip for now
+- Help (show troubleshooting)
+```
+
+### Verification
+
+For each MCP that was configured:
+
+```
+Prometheus:
+  Try querying: mcp__prometheus__query with query="up"
+  IF success: PASS
+  ELSE: FAIL (show error)
+
+Loki:
+  Try querying: mcp__loki__query_range with query="{job=~\".+\"}"
+  IF success: PASS
+  ELSE: FAIL (show error)
+
+Alertmanager:
+  Try querying: mcp__alertmanager__get_alerts
+  IF success: PASS
+  ELSE: FAIL (show error)
+```
+
+### Actions
+
+1. Update progress:
+   ```yaml
+   phases:
+     8_observability_mcp:
+       status: completed  # or skipped or partial
+       data:
+         prometheus:
+           url: {prometheus_url}
+           installed: true/false
+           tested: true/false
+         loki:
+           url: {loki_url}
+           installed: true/false
+           tested: true/false
+         alertmanager:
+           url: {alertmanager_url}
+           installed: true/false
+           tested: true/false
+         skipped: true/false
+   current_phase: 9
+   last_updated: {now}
+   ```
+
+2. **IMPORTANT**: If any MCP was just installed, inform user:
+   ```
+   "MCP configuration changed. Please restart Claude Code and run /init again to continue."
+   ```
+   Save progress and exit gracefully.
+
+3. Proceed to Phase 9
+
+---
+
+## Phase 9: Configure Secrets
 
 **Purpose**: Set up required secrets in Vault
 
@@ -945,11 +1220,11 @@ Show:
    last_updated: {now}
    ```
 
-2. Proceed to Phase 9
+2. Proceed to Phase 10
 
 ---
 
-## Phase 9: Setup CI Issue
+## Phase 10: Setup CI Issue
 
 **Purpose**: Create initial issue and process it through the workflow
 
@@ -960,7 +1235,7 @@ If CI MCP was skipped in Phase 7:
 Show: "CI MCP was skipped. Cannot create setup issue automatically."
 Show: "You can create the issue manually later."
 Mark phase as skipped
-Skip to Phase 10
+Skip to Phase 11
 ```
 
 ### Create Issue
@@ -1026,15 +1301,15 @@ This will:
          issue_number: {number}
          issue_url: {url}
          final_state: ready-to-merge
-   current_phase: 10
+   current_phase: 11
    last_updated: {now}
    ```
 
-2. Proceed to Phase 10
+2. Proceed to Phase 11
 
 ---
 
-## Phase 10: Verify Checklist
+## Phase 11: Verify Checklist
 
 **Purpose**: Final verification that all setup items are complete
 
@@ -1083,21 +1358,50 @@ This will:
    ELSE: FAIL (or PENDING if issue is in progress)
    ```
 
-5. **Setup CI issue created**
+5. **Observability MCPs configured**
    ```
-   IF phases.9_setup_ci_issue.data.issue_number exists:
+   IF phases.8_observability_mcp.status == skipped:
+     SKIP (note: /patrol --logs and --metrics unavailable)
+   ELSE:
+     Check each MCP:
+
+     Prometheus:
+       IF phases.8_observability_mcp.data.prometheus.tested == true:
+         Try prometheus MCP command
+         IF success: PASS
+         ELSE: FAIL
+       ELSE: SKIP
+
+     Loki:
+       IF phases.8_observability_mcp.data.loki.tested == true:
+         Try loki MCP command
+         IF success: PASS
+         ELSE: FAIL
+       ELSE: SKIP
+
+     Alertmanager:
+       IF phases.8_observability_mcp.data.alertmanager.tested == true:
+         Try alertmanager MCP command
+         IF success: PASS
+         ELSE: FAIL
+       ELSE: SKIP
+   ```
+
+6. **Setup CI issue created**
+   ```
+   IF phases.10_setup_ci_issue.data.issue_number exists:
      Verify issue exists via CI MCP
      IF exists: PASS
      ELSE: FAIL
-   ELSE IF phases.9_setup_ci_issue.status == skipped:
+   ELSE IF phases.10_setup_ci_issue.status == skipped:
      SKIP
    ELSE:
      FAIL
    ```
 
-6. **Setup CI issue crunched to ready-to-merge**
+7. **Setup CI issue crunched to ready-to-merge**
    ```
-   IF phases.9_setup_ci_issue.data.final_state in [ready-to-merge, done]:
+   IF phases.10_setup_ci_issue.data.final_state in [ready-to-merge, done]:
      PASS
    ELSE:
      FAIL (show current state)
@@ -1118,6 +1422,8 @@ Read CLAUDE.md, find "## Setup Checklist" section, update with results:
     Verified: mcp__github__get_repo returned myorg/myproject
 [x] CI config ready
     Verified: .github/workflows/ci.yml exists
+[x] Observability MCPs configured
+    Verified: Prometheus, Loki, Alertmanager MCPs working
 [x] Setup CI issue created
     Verified: Issue #1 exists
 [x] Setup CI issue crunched to ready-to-merge
@@ -1155,13 +1461,17 @@ Show:
 1. Update progress:
    ```yaml
    phases:
-     10_verify_checklist:
+     11_verify_checklist:
        status: completed
        data:
          vault_mcp_working: true/false
          secrets_configured: true/false
          ci_mcp_working: true/false
          ci_config_ready: true/false
+         observability_configured: true/false
+         prometheus_working: true/false
+         loki_working: true/false
+         alertmanager_working: true/false
          setup_issue_created: true/false
          setup_issue_crunched: true/false
    ```
