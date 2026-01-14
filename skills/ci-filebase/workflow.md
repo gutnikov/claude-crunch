@@ -533,3 +533,442 @@ The `.claude/` directory is typically gitignored. If tracking ci-filebase in git
 .claude/*
 !.claude/ci-filebase/
 ```
+
+---
+
+## Local Docker CI/CD Commands
+
+File-based CI includes local Docker simulation for CI pipelines and staging deployment.
+
+### Directory Structure (with Docker)
+
+```
+.claude/ci-filebase/
+├── issues/
+├── prs/
+├── labels.json
+├── counter.json
+└── docker/
+    ├── docker-compose.staging.yaml
+    ├── Dockerfile.staging
+    ├── .env.staging
+    └── ci-config.json
+```
+
+### CI Config Schema (`docker/ci-config.json`)
+
+```json
+{
+  "app_name": "myapp",
+  "app_port": 8080,
+  "staging_port": 8080,
+  "health_endpoint": "/health",
+  "commands": {
+    "lint": "npm run lint",
+    "test": "npm test",
+    "build": "npm run build",
+    "security": ""
+  },
+  "dockerfile": "Dockerfile.staging",
+  "compose_file": "docker-compose.staging.yaml"
+}
+```
+
+### `docker init` Command
+
+**Purpose**: Initialize local Docker CI/CD infrastructure.
+
+```
+1. Check if .claude/ci-filebase/docker/ exists
+   IF exists:
+     Show warning: "Docker CI already initialized"
+     Ask user to confirm re-initialization
+     IF not confirmed: abort
+
+2. Create directory:
+   mkdir -p .claude/ci-filebase/docker
+
+3. Detect project type and configure commands:
+   IF package.json exists:
+     commands.lint = "npm run lint"
+     commands.test = "npm test"
+     commands.build = "npm run build"
+   ELSE IF requirements.txt or pyproject.toml exists:
+     commands.lint = "ruff check ." or "flake8"
+     commands.test = "pytest"
+     commands.build = "pip install -e ."
+   ELSE IF go.mod exists:
+     commands.lint = "golangci-lint run"
+     commands.test = "go test ./..."
+     commands.build = "go build -o app ."
+   ELSE IF Cargo.toml exists:
+     commands.lint = "cargo clippy"
+     commands.test = "cargo test"
+     commands.build = "cargo build --release"
+   ELSE:
+     Ask user for commands
+
+4. Create ci-config.json with detected/provided commands
+
+5. Generate docker-compose.staging.yaml:
+   - Use template from 6-ci-filebase.md
+   - Substitute app_name, ports from config
+
+6. Generate Dockerfile.staging (if not exists at project root):
+   - Basic Dockerfile based on project type
+   - Or prompt user to provide existing Dockerfile path
+
+7. Create .env.staging with default environment variables
+
+8. Report success:
+   "Initialized Docker CI at .claude/ci-filebase/docker/
+    - Created docker-compose.staging.yaml
+    - Created Dockerfile.staging
+    - Created .env.staging
+    - CI commands configured for {project_type}
+
+    Next steps:
+    1. Review and customize docker-compose.staging.yaml
+    2. Run `/ci-filebase docker ci` to test pipeline
+    3. Run `/ci-filebase docker deploy staging` to deploy"
+```
+
+### `docker ci` Command
+
+**Purpose**: Run local CI pipeline simulation.
+
+**Syntax**: `/ci-filebase docker ci [--skip-lint] [--skip-test] [--skip-build]`
+
+```
+1. Read ci-config.json
+   IF not exists: error "Docker CI not initialized. Run `/ci-filebase docker init`"
+
+2. Display header:
+   "CI Pipeline - Local Simulation
+    =============================="
+
+3. Run pipeline stages:
+
+   stage_results = {}
+
+   # Stage 1: Lint
+   IF not --skip-lint AND config.commands.lint:
+     print "[1/4] Lint..........."
+     result = run_command(config.commands.lint)
+     stage_results.lint = result
+     print result.success ? "PASS" : "FAIL"
+     IF not result.success: show errors, abort
+
+   # Stage 2: Test
+   IF not --skip-test AND config.commands.test:
+     print "[2/4] Test..........."
+     result = run_command(config.commands.test)
+     stage_results.test = result
+     print result.success ? "PASS" : "FAIL"
+     IF not result.success: show errors, abort
+
+   # Stage 3: Build
+   IF not --skip-build AND config.commands.build:
+     print "[3/4] Build..........."
+     result = run_command(config.commands.build)
+     stage_results.build = result
+     print result.success ? "PASS" : "FAIL"
+     IF not result.success: show errors, abort
+
+   # Stage 4: Security (optional)
+   IF config.commands.security:
+     print "[4/4] Security........"
+     result = run_command(config.commands.security)
+     stage_results.security = result
+     print result.success ? "PASS" : "WARN"
+   ELSE:
+     print "[4/4] Security........ SKIP (no scanner configured)"
+
+4. Report summary:
+   "Pipeline: {PASSED|FAILED}
+    Duration: {total_time}
+
+    {IF PASSED}
+    Ready for staging deployment.
+    Run: /ci-filebase docker deploy staging
+    {ENDIF}"
+```
+
+### `docker deploy` Command
+
+**Purpose**: Deploy to local Docker staging environment.
+
+**Syntax**: `/ci-filebase docker deploy staging [--rebuild]`
+
+```
+1. Read ci-config.json
+   IF not exists: error "Docker CI not initialized"
+
+2. Verify docker-compose file exists:
+   compose_file = .claude/ci-filebase/docker/{config.compose_file}
+   IF not exists: error "Compose file not found"
+
+3. Build image (if --rebuild or image doesn't exist):
+   print "Building image: {app_name}:staging-{git_short_sha}"
+
+   result = docker build -t {app_name}:staging -f {dockerfile} .
+   IF not result.success: show errors, abort
+
+4. Deploy with docker-compose:
+   print "Starting containers..."
+
+   result = docker-compose -f {compose_file} up -d
+   IF not result.success: show errors, abort
+
+5. Wait for health check (max 60 seconds):
+   print "Waiting for health check..."
+
+   for attempt in 1..12:
+     sleep 5s
+     result = curl -s http://localhost:{staging_port}{health_endpoint}
+     IF result.status == 200:
+       break
+
+   IF health check failed after 60s:
+     show container logs
+     error "Health check failed"
+
+6. Report success:
+   "Deployment: SUCCESS
+    App URL: http://localhost:{staging_port}
+    Container: {app_name}-staging
+
+    Commands:
+    - View logs: /ci-filebase docker logs
+    - Health check: /ci-filebase docker health
+    - Stop: /ci-filebase docker stop"
+```
+
+### `docker logs` Command
+
+**Purpose**: View staging container logs.
+
+**Syntax**: `/ci-filebase docker logs [--tail N] [--follow]`
+
+```
+1. Read ci-config.json
+
+2. Run docker-compose logs:
+
+   args = []
+   IF --tail: args.append("-n {N}")
+   IF --follow: args.append("-f")
+
+   docker-compose -f {compose_file} logs {args}
+```
+
+### `docker health` Command
+
+**Purpose**: Check staging environment health.
+
+**Syntax**: `/ci-filebase docker health`
+
+```
+1. Read ci-config.json
+
+2. Check container status:
+   container_status = docker inspect {app_name}-staging --format '{{.State.Status}}'
+
+3. Check health endpoint:
+   health_response = curl -s -w "%{http_code}" http://localhost:{staging_port}{health_endpoint}
+
+4. Get recent error logs:
+   error_logs = docker-compose logs --tail=50 2>&1 | grep -i "error\|exception\|fatal"
+
+5. Get resource usage:
+   stats = docker stats {app_name}-staging --no-stream --format "{{.CPUPerc}},{{.MemUsage}}"
+
+6. Report:
+   "Staging Health Check
+    ====================
+    Container: {status} ({running_time})
+    Health endpoint: {http_code} {response_time}ms
+    CPU: {cpu_percent}
+    Memory: {mem_usage}
+
+    Recent errors: {error_count}
+    {IF error_count > 0}
+    ---
+    {error_log_sample}
+    {ENDIF}"
+```
+
+### `docker stop` Command
+
+**Purpose**: Stop local staging environment.
+
+**Syntax**: `/ci-filebase docker stop`
+
+```
+1. Read ci-config.json
+
+2. Stop containers:
+   docker-compose -f {compose_file} down
+
+3. Report:
+   "Staging environment stopped.
+
+    To restart: /ci-filebase docker deploy staging"
+```
+
+### `docker rebuild` Command
+
+**Purpose**: Rebuild and restart staging containers.
+
+**Syntax**: `/ci-filebase docker rebuild`
+
+```
+1. Read ci-config.json
+
+2. Rebuild and restart:
+   docker-compose -f {compose_file} up -d --build
+
+3. Wait for health check (same as deploy)
+
+4. Report status
+```
+
+---
+
+## Integration with /crunch Workflow
+
+### VALIDATION Phase with Local Docker
+
+When CI platform is Filebase, the VALIDATION phase uses local Docker for staging validation.
+
+```
+VALIDATION Phase (Filebase + Docker):
+
+1. Deploy to local staging:
+   /ci-filebase docker deploy staging
+
+2. Execute DoD checklist:
+   - App running: /ci-filebase docker health
+   - Error logs: /ci-filebase docker logs --tail 100 | check for errors
+   - Functional checks: Manual or via curl/test commands
+   - Regression checks: Manual verification
+
+3. Continuous monitoring (simplified for local Docker):
+   duration: 10m (shorter than remote staging)
+   interval: 2m
+
+   For each cycle:
+     - Check health endpoint
+     - Check docker logs for new errors
+     - Check container stability (no restarts)
+
+   IF anomaly detected:
+     - Show logs
+     - Return to IMPLEMENTING (no auto-remediation for local)
+
+4. On success:
+   - Mark DoD items as checked
+   - Proceed to DOCS phase
+```
+
+### Staging Remediation (Local Docker)
+
+For local Docker staging, remediation is simpler:
+
+| Action | When | Command |
+|--------|------|---------|
+| `restart_container` | Container issues | `/ci-filebase docker rebuild` |
+| `view_logs` | Any issue | `/ci-filebase docker logs --tail 100` |
+| `stop_start` | Stuck container | `/ci-filebase docker stop && /ci-filebase docker deploy staging` |
+
+### Operation Mapping (with Docker)
+
+| /crunch needs to... | MCP (GitHub) | Filebase | Filebase + Docker |
+|---------------------|--------------|----------|-------------------|
+| Run CI pipeline | Automatic | Manual | `/ci-filebase docker ci` |
+| Deploy to staging | Remote deploy | Manual | `/ci-filebase docker deploy staging` |
+| Check staging health | Observability MCP | Manual | `/ci-filebase docker health` |
+| View staging logs | Loki MCP | Manual | `/ci-filebase docker logs` |
+| Restart staging | kubectl/API | Manual | `/ci-filebase docker rebuild` |
+
+---
+
+## Validation Output Format (Local Docker)
+
+**Success case:**
+
+```
+Continuous Monitoring - LOCAL DOCKER STAGING
+============================================
+Environment: local-docker
+Issue: #5
+Duration: 10 minutes (5 cycles)
+Started: 2024-01-14T10:00:00Z
+
+Deployment check:
+  ✓ Container running: myapp-staging (up 2 minutes)
+  ✓ Health endpoint: 200 OK (45ms)
+
+Cycle 1/5 [10:02:00]:
+  ✓ Health: 200 OK
+  ✓ Logs: No new errors
+  ✓ Container: Stable (no restarts)
+  Status: HEALTHY
+
+Cycle 2/5 [10:04:00]:
+  ✓ Health: 200 OK
+  ✓ Logs: No new errors
+  ✓ Container: Stable
+  Status: HEALTHY
+
+... (cycles 3-5 similar)
+
+============================================
+Monitoring Complete
+Duration: 10 minutes
+Result: PASSED
+
+Staging validated on local Docker.
+Proceeding to DOCS phase.
+```
+
+**Failure case:**
+
+```
+Continuous Monitoring - LOCAL DOCKER STAGING
+============================================
+Environment: local-docker
+Issue: #5
+Duration: 10 minutes (5 cycles)
+Started: 2024-01-14T10:00:00Z
+
+Cycle 1/5 [10:02:00]:
+  ✓ Health: 200 OK
+  ✓ Logs: No errors
+  Status: HEALTHY
+
+Cycle 2/5 [10:04:00]:
+  ✗ Health: 500 Internal Server Error
+  ✗ Logs: NullPointerException in UserService.getProfile()
+  Status: ANOMALY DETECTED
+
+Container logs (last 20 lines):
+---
+2024-01-14T10:03:55 ERROR UserService - NullPointerException
+    at com.example.UserService.getProfile(UserService.java:45)
+    at com.example.ApiController.user(ApiController.java:23)
+---
+
+============================================
+Monitoring Stopped Early
+Duration: 4 minutes
+Result: FAILED - Bug detected
+
+Action Required:
+  1. Review logs above
+  2. Fix NullPointerException in UserService
+  3. Re-deploy: /ci-filebase docker deploy staging
+  4. Re-run validation
+
+Returning to IMPLEMENTING phase.
+```

@@ -126,14 +126,14 @@ REDIS_URL: ENC[AES256_GCM,data:...,type:str]
 API_KEY: ENC[AES256_GCM,data:...,type:str]
 JWT_SECRET: ENC[AES256_GCM,data:...,type:str]
 sops:
-    age:
-        - recipient: age1...
-          enc: |
-            -----BEGIN AGE ENCRYPTED FILE-----
-            ...
-            -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-01-14T10:00:00Z"
-    version: 3.8.1
+  age:
+    - recipient: age1...
+      enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        ...
+        -----END AGE ENCRYPTED FILE-----
+  lastmodified: "2024-01-14T10:00:00Z"
+  version: 3.8.1
 ```
 
 Decrypted view:
@@ -199,10 +199,10 @@ age-keygen -y keys/staging.age > keys/staging.txt
 
 #### Key Storage
 
-| Key Type | Location | Git |
-|----------|----------|-----|
-| Public key | `secrets/keys/*.txt` or `.sops.yaml` | Safe to commit |
-| Private key | `~/.config/sops/age/keys.txt` or secure vault | NEVER commit |
+| Key Type    | Location                                      | Git            |
+| ----------- | --------------------------------------------- | -------------- |
+| Public key  | `secrets/keys/*.txt` or `.sops.yaml`          | Safe to commit |
+| Private key | `~/.config/sops/age/keys.txt` or secure vault | NEVER commit   |
 
 #### Configure age Key Location
 
@@ -218,21 +218,22 @@ sops --age-key-file ~/.age/production.age --decrypt secrets/production.yaml
 
 ### Quick Reference Table
 
-| Operation | Command |
-|-----------|---------|
-| Decrypt file | `sops --decrypt secrets/{env}.yaml` |
-| Encrypt file | `sops --encrypt file.yaml > file.enc.yaml` |
-| Edit in-place | `sops secrets/{env}.yaml` |
+| Operation        | Command                                                 |
+| ---------------- | ------------------------------------------------------- |
+| Decrypt file     | `sops --decrypt secrets/{env}.yaml`                     |
+| Encrypt file     | `sops --encrypt file.yaml > file.enc.yaml`              |
+| Edit in-place    | `sops secrets/{env}.yaml`                               |
 | Get single value | `sops --decrypt --extract '["KEY"]' secrets/{env}.yaml` |
-| Set single value | `sops --set '["KEY"] "value"' secrets/{env}.yaml` |
-| Generate age key | `age-keygen -o keyfile.age` |
-| Get public key | `age-keygen -y keyfile.age` |
+| Set single value | `sops --set '["KEY"] "value"' secrets/{env}.yaml`       |
+| Generate age key | `age-keygen -o keyfile.age`                             |
+| Get public key   | `age-keygen -y keyfile.age`                             |
 
 ---
 
 ### Initial Setup
 
 1. **Install SOPS and age:**
+
    ```bash
    # macOS
    brew install sops age
@@ -244,6 +245,7 @@ sops --age-key-file ~/.age/production.age --decrypt secrets/production.yaml
    ```
 
 2. **Generate age key pair:**
+
    ```bash
    mkdir -p ~/.config/sops/age
    age-keygen -o ~/.config/sops/age/keys.txt
@@ -254,6 +256,7 @@ sops --age-key-file ~/.age/production.age --decrypt secrets/production.yaml
 4. **Create `.sops.yaml` configuration** (see above)
 
 5. **Create initial secrets files:**
+
    ```bash
    # Create staging secrets
    echo "DATABASE_URL: postgresql://..." > secrets/staging.yaml.dec
@@ -265,6 +268,7 @@ sops --age-key-file ~/.age/production.age --decrypt secrets/production.yaml
    ```
 
 6. **Add to .gitignore:**
+
    ```gitignore
    # Private keys - NEVER commit
    *.age
@@ -316,13 +320,13 @@ deploy:
 
 ### Comparison with Vault
 
-| Feature | SOPS + age | Vault |
-|---------|------------|-------|
-| Infrastructure | None (files) | Server required |
-| Git integration | Encrypted files in repo | External storage |
-| Audit trail | Git history | Built-in audit log |
-| Dynamic secrets | No | Yes |
-| Access control | Key distribution | Policies, roles |
-| Offline access | Yes | Requires server |
-| Complexity | Low | High |
-| Best for | Small teams, local dev | Enterprise, compliance |
+| Feature         | SOPS + age              | Vault                  |
+| --------------- | ----------------------- | ---------------------- |
+| Infrastructure  | None (files)            | Server required        |
+| Git integration | Encrypted files in repo | External storage       |
+| Audit trail     | Git history             | Built-in audit log     |
+| Dynamic secrets | No                      | Yes                    |
+| Access control  | Key distribution        | Policies, roles        |
+| Offline access  | Yes                     | Requires server        |
+| Complexity      | Low                     | High                   |
+| Best for        | Small teams, local dev  | Enterprise, compliance |

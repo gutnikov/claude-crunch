@@ -507,9 +507,53 @@ Update issue body:
 
 **Environment**: Staging ONLY. This phase never touches production.
 
-**Duration**: Time-bounded. Default 20 minutes for continuous monitoring.
+**Duration**: Time-bounded. Default 20 minutes for continuous monitoring (10 minutes for local Docker).
 
-### Execute DoD Checklist
+### Platform-Specific Staging
+
+| CI Platform | Staging Environment | Deploy Method | Monitoring |
+|-------------|---------------------|---------------|------------|
+| GitHub/GitLab/Gitea | Remote staging infra | CI/CD pipeline | Observability MCPs |
+| Filebase | Local Docker | `/ci-filebase docker deploy staging` | Docker logs/health |
+
+### Filebase + Local Docker Validation
+
+When CI platform is Filebase, validation uses local Docker instead of remote infrastructure.
+
+```
+VALIDATION Phase (Filebase):
+
+1. Run CI pipeline locally:
+   /ci-filebase docker ci
+   IF pipeline fails: stay in IMPLEMENTING, fix issues
+
+2. Deploy to local staging:
+   /ci-filebase docker deploy staging
+   IF deploy fails: show logs, stay in IMPLEMENTING
+
+3. Execute DoD checklist (see below):
+   - App running: /ci-filebase docker health
+   - Error logs: /ci-filebase docker logs --tail 100
+   - Functional: Manual curl/test commands against localhost
+   - Regression: Manual verification
+
+4. Continuous monitoring (simplified):
+   duration: 10m (shorter for local)
+   interval: 2m
+   checks: health endpoint, docker logs, container stability
+
+5. On anomaly:
+   - Show docker logs
+   - Return to IMPLEMENTING (no auto-remediation for local)
+   - User fixes bug and re-deploys
+
+6. On success:
+   - Mark DoD items checked
+   - Stop staging: /ci-filebase docker stop (optional)
+   - Proceed to DOCS phase
+```
+
+### Execute DoD Checklist (MCP-based CI)
 
 Go through each item in the DoD checklist:
 
@@ -592,9 +636,12 @@ Execution:
 | Memory growth | 10% increase | 25% increase |
 
 **Skip Conditions**:
-- No observability infrastructure configured
+- No observability infrastructure configured (MCP-based CI)
+- No Docker available (Filebase CI)
 - User explicitly skips with flag
 - Hotfix/emergency deployment
+
+**Filebase Note**: When using Filebase CI without Docker, VALIDATION falls back to manual verification only. User must manually test the application and confirm DoD checklist items.
 
 ### Staging Anomaly Handling
 
@@ -1684,3 +1731,6 @@ Before running in non-interactive mode, ensure:
   - MCP-based (GitHub/GitLab/Gitea): CI MCP server configured
   - Filebase: `.claude/ci-filebase/` directory initialized
 - [ ] Required labels exist (in CI platform or `labels.json` for Filebase)
+- [ ] VALIDATION requirements met:
+  - MCP-based: Observability MCPs configured (Prometheus, Loki) OR skip monitoring
+  - Filebase: Docker installed and `/ci-filebase docker init` completed OR manual validation only

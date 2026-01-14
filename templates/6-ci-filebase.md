@@ -239,13 +239,197 @@ make
 
 ---
 
+## Local Docker CI/CD
+
+File-based CI includes local Docker simulation for CI pipelines and staging deployment when external CI platforms are unavailable.
+
+### Initialize Docker CI
+
+Set up local Docker staging environment:
+
+```
+/ci-filebase docker init
+```
+
+Creates:
+- `.claude/ci-filebase/docker/docker-compose.staging.yaml` - Staging services
+- `.claude/ci-filebase/docker/Dockerfile.staging` - App container (if needed)
+- `.claude/ci-filebase/docker/.env.staging` - Environment variables
+
+### Run CI Pipeline (Local Simulation)
+
+Simulate CI pipeline locally before deployment:
+
+```
+/ci-filebase docker ci
+```
+
+Runs in sequence:
+1. **Lint** - Code style checks
+2. **Test** - Unit and integration tests
+3. **Build** - Build application/container
+4. **Security scan** - Basic vulnerability checks (optional)
+
+**Example output:**
+```
+CI Pipeline - Local Simulation
+==============================
+[1/4] Lint........... PASS (12s)
+[2/4] Test........... PASS (45s)
+[3/4] Build.......... PASS (30s)
+[4/4] Security....... SKIP (no scanner configured)
+
+Pipeline: PASSED
+Ready for staging deployment.
+```
+
+### Deploy to Local Staging
+
+Deploy application to local Docker staging:
+
+```
+/ci-filebase docker deploy staging
+```
+
+Actions:
+1. Build Docker image (if changed)
+2. Start/update staging containers via docker-compose
+3. Wait for health checks
+4. Report deployment status
+
+**Example:**
+```
+Deploying to local staging...
+  Building image: myapp:staging-abc123
+  Starting containers: docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml up -d
+  Waiting for health check...
+
+Deployment: SUCCESS
+  App URL: http://localhost:8080
+  Logs: docker-compose logs -f
+```
+
+### View Staging Logs
+
+Monitor staging container logs:
+
+```
+/ci-filebase docker logs
+```
+
+Or with docker-compose directly:
+```bash
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml logs -f
+```
+
+### Staging Health Check
+
+Check staging environment health:
+
+```
+/ci-filebase docker health
+```
+
+Checks:
+- Container status (running/stopped)
+- Health endpoint response
+- Recent error logs
+- Resource usage
+
+### Stop Staging
+
+Stop local staging environment:
+
+```
+/ci-filebase docker stop
+```
+
+### Docker Compose Template
+
+Generated `docker-compose.staging.yaml`:
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ../../../..
+      dockerfile: .claude/ci-filebase/docker/Dockerfile.staging
+    image: ${APP_NAME:-myapp}:staging
+    container_name: ${APP_NAME:-myapp}-staging
+    ports:
+      - "${STAGING_PORT:-8080}:${APP_PORT:-8080}"
+    environment:
+      - NODE_ENV=staging
+      - LOG_LEVEL=debug
+    env_file:
+      - .env.staging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${APP_PORT:-8080}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    volumes:
+      - app-logs:/var/log/app
+
+  # Optional: Add database, redis, etc. as needed
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: myapp_staging
+  #     POSTGRES_USER: staging
+  #     POSTGRES_PASSWORD: staging_password
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+
+volumes:
+  app-logs:
+  # db-data:
+```
+
+### Quick Reference - Docker Commands
+
+| Action              | Command                          |
+| ------------------- | -------------------------------- |
+| Initialize Docker   | `/ci-filebase docker init`       |
+| Run CI pipeline     | `/ci-filebase docker ci`         |
+| Deploy to staging   | `/ci-filebase docker deploy staging` |
+| View logs           | `/ci-filebase docker logs`       |
+| Health check        | `/ci-filebase docker health`     |
+| Stop staging        | `/ci-filebase docker stop`       |
+| Rebuild containers  | `/ci-filebase docker rebuild`    |
+
+### Manual Docker Commands
+
+For direct control, use docker-compose:
+
+```bash
+# Start staging
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml up -d
+
+# View logs
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml logs -f
+
+# Stop staging
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml down
+
+# Rebuild and restart
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml up -d --build
+```
+
+---
+
 ## Comparison with MCP-based CI
 
-| Feature          | GitHub/GitLab/Gitea MCP | File-based CI    |
-| ---------------- | ----------------------- | ---------------- |
-| Issue tracking   | Remote API              | Local JSON files |
-| PR management    | Remote API              | Local JSON files |
-| CI/CD pipelines  | Automated               | Manual scripts   |
-| Collaboration    | Multi-user              | Single-user      |
-| Offline support  | Requires network        | Fully offline    |
-| Setup complexity | MCP + tokens            | Zero config      |
+| Feature          | GitHub/GitLab/Gitea MCP | File-based CI         |
+| ---------------- | ----------------------- | --------------------- |
+| Issue tracking   | Remote API              | Local JSON files      |
+| PR management    | Remote API              | Local JSON files      |
+| CI/CD pipelines  | Automated (cloud)       | Local Docker          |
+| Staging deploy   | Remote infrastructure   | Local Docker          |
+| Collaboration    | Multi-user              | Single-user           |
+| Offline support  | Requires network        | Fully offline         |
+| Setup complexity | MCP + tokens            | Docker only           |

@@ -180,22 +180,22 @@ Add Vault MCP to Claude configuration:
 
 **Authentication options:**
 
-| Method | Environment Variable | Use Case |
-|--------|---------------------|----------|
-| Token | `VAULT_TOKEN` | Development, CI/CD |
-| AppRole | `VAULT_ROLE_ID`, `VAULT_SECRET_ID` | Production automation |
-| Kubernetes | `VAULT_K8S_ROLE` | Kubernetes deployments |
+| Method     | Environment Variable               | Use Case               |
+| ---------- | ---------------------------------- | ---------------------- |
+| Token      | `VAULT_TOKEN`                      | Development, CI/CD     |
+| AppRole    | `VAULT_ROLE_ID`, `VAULT_SECRET_ID` | Production automation  |
+| Kubernetes | `VAULT_K8S_ROLE`                   | Kubernetes deployments |
 
 ---
 
 ### Quick Reference Table
 
-| Operation | MCP Command | CLI Command |
-|-----------|-------------|-------------|
-| Check status | `mcp__vault__status` | `vault status` |
-| Read secret | `mcp__vault__read` | `vault kv get` |
-| Write secret | `mcp__vault__write` | `vault kv put` |
-| List secrets | `mcp__vault__list` | `vault kv list` |
+| Operation     | MCP Command          | CLI Command       |
+| ------------- | -------------------- | ----------------- |
+| Check status  | `mcp__vault__status` | `vault status`    |
+| Read secret   | `mcp__vault__read`   | `vault kv get`    |
+| Write secret  | `mcp__vault__write`  | `vault kv put`    |
+| List secrets  | `mcp__vault__list`   | `vault kv list`   |
 | Delete secret | `mcp__vault__delete` | `vault kv delete` |
 
 ---
@@ -203,6 +203,7 @@ Add Vault MCP to Claude configuration:
 ### Initial Setup
 
 1. **Install Vault MCP server:**
+
    ```bash
    npm install -g @anthropic/vault-mcp
    ```
@@ -210,12 +211,14 @@ Add Vault MCP to Claude configuration:
 2. **Configure MCP in Claude settings** (see above)
 
 3. **Create project secret paths:**
+
    ```bash
    vault kv put secret/{project}/staging/placeholder value="setup"
    vault kv put secret/{project}/production/placeholder value="setup"
    ```
 
 4. **Verify connectivity:**
+
    ```
    mcp__vault__status()
    ```

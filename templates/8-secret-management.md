@@ -56,13 +56,13 @@ TEMPLATE: Define required secrets. Remove this comment after configuration.
 
 This project requires the following secret operations:
 
-| Operation | When Used | Description |
-|-----------|-----------|-------------|
-| **Read secret** | Deployment, runtime | Retrieve secret value for application use |
-| **Write secret** | Initial setup, rotation | Create or update a secret |
-| **List secrets** | Audit, verification | List available secrets (not values) |
-| **Verify secret** | Setup, CI/CD | Check if secret exists and is readable |
-| **Delete secret** | Cleanup, rotation | Remove old/unused secrets |
+| Operation         | When Used               | Description                               |
+| ----------------- | ----------------------- | ----------------------------------------- |
+| **Read secret**   | Deployment, runtime     | Retrieve secret value for application use |
+| **Write secret**  | Initial setup, rotation | Create or update a secret                 |
+| **List secrets**  | Audit, verification     | List available secrets (not values)       |
+| **Verify secret** | Setup, CI/CD            | Check if secret exists and is readable    |
+| **Delete secret** | Cleanup, rotation       | Remove old/unused secrets                 |
 
 ### What NOT to Do
 

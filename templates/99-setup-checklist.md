@@ -58,6 +58,41 @@
 - [ ] Test issue created (`/ci-filebase issue create "Test"`)
 - [ ] Test issue labels work (`/ci-filebase issue label 1 type:feature`)
 
+#### Filebase Docker CI/CD (Local staging)
+
+> **Note:** Required for VALIDATION phase with Filebase. Enables local CI pipeline simulation and Docker-based staging.
+
+- [ ] Docker installed (`docker --version`)
+- [ ] Docker Compose installed (`docker-compose --version` or `docker compose version`)
+- [ ] Docker daemon running (`docker ps`)
+- [ ] Docker CI initialized (`/ci-filebase docker init`)
+- [ ] `.claude/ci-filebase/docker/` directory created
+- [ ] `docker-compose.staging.yaml` generated
+- [ ] `ci-config.json` created with project commands
+- [ ] CI pipeline test passed (`/ci-filebase docker ci`)
+- [ ] Local staging deployment works (`/ci-filebase docker deploy staging`)
+- [ ] Health check passes (`/ci-filebase docker health`)
+- [ ] Staging stopped cleanly (`/ci-filebase docker stop`)
+
+#### Docker Verification Commands
+
+```bash
+# Verify Docker installation
+docker --version
+docker-compose --version
+
+# Check Docker daemon is running
+docker ps
+
+# Test docker-compose with staging
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml config
+
+# Manual staging test
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml up -d
+curl http://localhost:8080/health
+docker-compose -f .claude/ci-filebase/docker/docker-compose.staging.yaml down
+```
+
 ### Observability Infrastructure
 
 > **Note:** Required for `/patrol` skill and VALIDATION continuous monitoring. Can be skipped if observability is not needed, but `/patrol --logs` and `/patrol --metrics` will be unavailable.
@@ -119,21 +154,22 @@ curl -s http://<ALERTMANAGER_URL>/-/healthy
 
 #### Recommended LSP Servers by Language
 
-| Language | Server | Installation |
-|----------|--------|--------------|
+| Language              | Server                       | Installation                                           |
+| --------------------- | ---------------------------- | ------------------------------------------------------ |
 | TypeScript/JavaScript | `typescript-language-server` | `npm install -g typescript-language-server typescript` |
-| Python | `pylsp` (python-lsp-server) | `pip install python-lsp-server` |
-| Go | `gopls` | `go install golang.org/x/tools/gopls@latest` |
-| Rust | `rust-analyzer` | `rustup component add rust-analyzer` |
-| C/C++ | `clangd` | Install via package manager or LLVM |
-| Java | `jdtls` | Download from Eclipse JDT LS releases |
-| Ruby | `solargraph` | `gem install solargraph` |
+| Python                | `pylsp` (python-lsp-server)  | `pip install python-lsp-server`                        |
+| Go                    | `gopls`                      | `go install golang.org/x/tools/gopls@latest`           |
+| Rust                  | `rust-analyzer`              | `rustup component add rust-analyzer`                   |
+| C/C++                 | `clangd`                     | Install via package manager or LLVM                    |
+| Java                  | `jdtls`                      | Download from Eclipse JDT LS releases                  |
+| Ruby                  | `solargraph`                 | `gem install solargraph`                               |
 
 #### Installation Steps
 
 1. **Install the LSP server** for your project's language(s) using the commands above
 
 2. **Verify installation** by running the server with `--version`:
+
    ```bash
    typescript-language-server --version
    pylsp --version
@@ -264,5 +300,30 @@ For teams without existing infrastructure, the minimum setup is:
 2. **No MCP required** - Everything stored in `.claude/ci-filebase/`
 3. **Skip observability** - Manual validation only
 4. **Ideal for** - Air-gapped environments, rapid prototyping, single-developer projects
+
+### Option C: Fully Local with Docker (Filebase + Docker)
+
+1. **Filebase CI** - Local issue/PR tracking via `/ci-filebase`
+2. **Docker CI/CD** - Local CI pipeline and staging via `/ci-filebase docker`
+3. **No external dependencies** - Everything runs locally in Docker
+4. **VALIDATION support** - Full validation phase with local Docker staging
+5. **Ideal for** - Local development with real validation, teams without cloud infrastructure
+
+**Setup:**
+```bash
+# Initialize Filebase CI
+/ci-filebase init
+
+# Initialize Docker CI (requires Docker installed)
+/ci-filebase docker init
+
+# Test pipeline
+/ci-filebase docker ci
+
+# Test staging
+/ci-filebase docker deploy staging
+/ci-filebase docker health
+/ci-filebase docker stop
+```
 
 Full observability is recommended for production projects but not required to use the core `/crunch` workflow.
