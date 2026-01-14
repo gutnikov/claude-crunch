@@ -78,6 +78,75 @@ curl -s http://<ALERTMANAGER_URL>/-/healthy
 - [ ] Knowledge index initialized
 - [ ] Knowledge MCP configured (if using external storage)
 
+### Language Server Plugins (Optional)
+
+> **Note:** Language Server Protocol (LSP) integration enables code intelligence features like go-to-definition, find-references, and hover documentation. This enhances Claude Code's ability to navigate and understand your codebase.
+
+#### Recommended LSP Servers by Language
+
+| Language | Server | Installation |
+|----------|--------|--------------|
+| TypeScript/JavaScript | `typescript-language-server` | `npm install -g typescript-language-server typescript` |
+| Python | `pylsp` (python-lsp-server) | `pip install python-lsp-server` |
+| Go | `gopls` | `go install golang.org/x/tools/gopls@latest` |
+| Rust | `rust-analyzer` | `rustup component add rust-analyzer` |
+| C/C++ | `clangd` | Install via package manager or LLVM |
+| Java | `jdtls` | Download from Eclipse JDT LS releases |
+| Ruby | `solargraph` | `gem install solargraph` |
+
+#### Installation Steps
+
+1. **Install the LSP server** for your project's language(s) using the commands above
+
+2. **Verify installation** by running the server with `--version`:
+   ```bash
+   typescript-language-server --version
+   pylsp --version
+   gopls version
+   ```
+
+3. **Configure in Claude Code** by adding to your settings (`.claude/settings.json`):
+   ```json
+   {
+     "lsp": {
+       "servers": {
+         "typescript": {
+           "command": "typescript-language-server",
+           "args": ["--stdio"]
+         },
+         "python": {
+           "command": "pylsp"
+         },
+         "go": {
+           "command": "gopls",
+           "args": ["serve"]
+         }
+       }
+     }
+   }
+   ```
+
+#### LSP Checklist
+
+- [ ] Identified primary language(s) in project
+- [ ] LSP server(s) installed for primary language(s)
+- [ ] LSP server(s) verified working (`--version` check)
+- [ ] LSP configuration added to Claude Code settings (if needed)
+
+#### Available LSP Operations
+
+Once configured, Claude Code can use these LSP features:
+
+- **goToDefinition** - Jump to where a symbol is defined
+- **findReferences** - Find all usages of a symbol
+- **hover** - Get documentation and type info
+- **documentSymbol** - List all symbols in a file
+- **workspaceSymbol** - Search symbols across the project
+- **goToImplementation** - Find interface implementations
+- **incomingCalls/outgoingCalls** - Trace call hierarchies
+
+---
+
 ### Multi-Agent Orchestration (Optional)
 
 > **Note:** Orchestration is automatically enabled when issue complexity is HIGH (score >= 5) or spans multiple domains.
