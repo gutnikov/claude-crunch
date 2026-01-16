@@ -8,70 +8,58 @@ Agent performance tracking enables adaptive routing by recording success rates, 
 
 ## Storage Location
 
-Performance metrics are stored in `.claude/knowledge/index.json` under the `agent_metrics` key.
+Performance metrics are stored in `.claude/knowledge/index.yaml` under the `agent_metrics` key.
 
 ## Schema Definition
 
 ### Full Agent Metrics Schema
 
-```json
-{
-  "agent_metrics": {
-    "{agent_name}": {
-      "total_invocations": 0,
-      "success_rate": 0.0,
-      "average_duration_ms": 0,
+```yaml
+agent_metrics:
+  "{agent_name}":
+    total_invocations: 0
+    success_rate: 0.0
+    average_duration_ms: 0
 
-      "by_domain": {
-        "{domain}": {
-          "count": 0,
-          "successes": 0,
-          "failures": 0,
-          "partials": 0,
-          "success_rate": 0.0,
-          "avg_duration_ms": 0,
-          "quality_score": 0,
-          "last_invoked": "ISO-8601",
-          "trend": "up|down|stable"
-        }
-      },
+    by_domain:
+      "{domain}":
+        count: 0
+        successes: 0
+        failures: 0
+        partials: 0
+        success_rate: 0.0
+        avg_duration_ms: 0
+        quality_score: 0
+        last_invoked: "ISO-8601"
+        trend: up|down|stable
 
-      "by_phase": {
-        "{phase}": {
-          "count": 0,
-          "successes": 0,
-          "failures": 0,
-          "success_rate": 0.0,
-          "avg_duration_ms": 0
-        }
-      },
+    by_phase:
+      "{phase}":
+        count: 0
+        successes: 0
+        failures: 0
+        success_rate: 0.0
+        avg_duration_ms: 0
 
-      "quality_indicators": {
-        "review_pass_rate": 0.0,
-        "rework_rate": 0.0,
-        "user_overrides": 0,
-        "veto_rate": 0.0
-      },
+    quality_indicators:
+      review_pass_rate: 0.0
+      rework_rate: 0.0
+      user_overrides: 0
+      veto_rate: 0.0
 
-      "routing_weight": 1.0,
+    routing_weight: 1.0
 
-      "recent_performance": {
-        "last_7_days": {
-          "count": 0,
-          "success_rate": 0.0,
-          "trend": "up|down|stable"
-        },
-        "last_30_days": {
-          "count": 0,
-          "success_rate": 0.0,
-          "trend": "up|down|stable"
-        }
-      },
+    recent_performance:
+      last_7_days:
+        count: 0
+        success_rate: 0.0
+        trend: up|down|stable
+      last_30_days:
+        count: 0
+        success_rate: 0.0
+        trend: up|down|stable
 
-      "last_updated": "ISO-8601"
-    }
-  }
-}
+    last_updated: "ISO-8601"
 ```
 
 ### Field Definitions
@@ -186,22 +174,19 @@ def calculate_routing_weight(agent_metrics, domain):
 
 ### After Each Agent Invocation
 
-```json
-{
-  "event": "agent_invocation_complete",
-  "timestamp": "ISO-8601",
-  "agent": "security-analyst",
-  "issue_number": 42,
-  "phase": "enrich",
-  "domain": "security",
-  "outcome": "success|partial|failed",
-  "duration_ms": 45000,
-  "quality_indicators": {
-    "review_passed": true,
-    "rework_needed": false,
-    "user_override": false
-  }
-}
+```yaml
+event: agent_invocation_complete
+timestamp: "ISO-8601"
+agent: security-analyst
+issue_number: 42
+phase: enrich
+domain: security
+outcome: success|partial|failed
+duration_ms: 45000
+quality_indicators:
+  review_passed: true
+  rework_needed: false
+  user_override: false
 ```
 
 ### Processing Update
@@ -249,26 +234,28 @@ def update_agent_metrics(event, metrics):
 
 New agents start with default metrics:
 
-```json
-{
-  "total_invocations": 0,
-  "success_rate": 0.75,
-  "average_duration_ms": 0,
-  "by_domain": {},
-  "by_phase": {},
-  "quality_indicators": {
-    "review_pass_rate": 0.75,
-    "rework_rate": 0.25,
-    "user_overrides": 0,
-    "veto_rate": 0.0
-  },
-  "routing_weight": 1.0,
-  "recent_performance": {
-    "last_7_days": { "count": 0, "success_rate": 0.0, "trend": "stable" },
-    "last_30_days": { "count": 0, "success_rate": 0.0, "trend": "stable" }
-  },
-  "last_updated": null
-}
+```yaml
+total_invocations: 0
+success_rate: 0.75
+average_duration_ms: 0
+by_domain: {}
+by_phase: {}
+quality_indicators:
+  review_pass_rate: 0.75
+  rework_rate: 0.25
+  user_overrides: 0
+  veto_rate: 0.0
+routing_weight: 1.0
+recent_performance:
+  last_7_days:
+    count: 0
+    success_rate: 0.0
+    trend: stable
+  last_30_days:
+    count: 0
+    success_rate: 0.0
+    trend: stable
+last_updated: null
 ```
 
 Default success rate of 0.75 gives new agents a fair chance while experienced agents are preferred.
@@ -290,82 +277,68 @@ def apply_metrics_decay(agent_metrics, decay_rate=0.01):
 
 ## Example: Full Agent Metrics
 
-```json
-{
-  "agent_metrics": {
-    "security-analyst": {
-      "total_invocations": 47,
-      "success_rate": 0.92,
-      "average_duration_ms": 45000,
+```yaml
+agent_metrics:
+  security-analyst:
+    total_invocations: 47
+    success_rate: 0.92
+    average_duration_ms: 45000
 
-      "by_domain": {
-        "security": {
-          "count": 35,
-          "successes": 33,
-          "failures": 1,
-          "partials": 1,
-          "success_rate": 0.94,
-          "avg_duration_ms": 42000,
-          "quality_score": 87,
-          "last_invoked": "2025-01-14T10:30:00Z",
-          "trend": "up"
-        },
-        "auth": {
-          "count": 12,
-          "successes": 11,
-          "failures": 0,
-          "partials": 1,
-          "success_rate": 0.92,
-          "avg_duration_ms": 50000,
-          "quality_score": 85,
-          "last_invoked": "2025-01-13T15:20:00Z",
-          "trend": "stable"
-        }
-      },
+    by_domain:
+      security:
+        count: 35
+        successes: 33
+        failures: 1
+        partials: 1
+        success_rate: 0.94
+        avg_duration_ms: 42000
+        quality_score: 87
+        last_invoked: "2025-01-14T10:30:00Z"
+        trend: up
+      auth:
+        count: 12
+        successes: 11
+        failures: 0
+        partials: 1
+        success_rate: 0.92
+        avg_duration_ms: 50000
+        quality_score: 85
+        last_invoked: "2025-01-13T15:20:00Z"
+        trend: stable
 
-      "by_phase": {
-        "enrich": {
-          "count": 20,
-          "successes": 19,
-          "failures": 1,
-          "success_rate": 0.95,
-          "avg_duration_ms": 60000
-        },
-        "review": {
-          "count": 27,
-          "successes": 24,
-          "failures": 1,
-          "success_rate": 0.89,
-          "avg_duration_ms": 35000
-        }
-      },
+    by_phase:
+      enrich:
+        count: 20
+        successes: 19
+        failures: 1
+        success_rate: 0.95
+        avg_duration_ms: 60000
+      review:
+        count: 27
+        successes: 24
+        failures: 1
+        success_rate: 0.89
+        avg_duration_ms: 35000
 
-      "quality_indicators": {
-        "review_pass_rate": 0.91,
-        "rework_rate": 0.08,
-        "user_overrides": 2,
-        "veto_rate": 0.15
-      },
+    quality_indicators:
+      review_pass_rate: 0.91
+      rework_rate: 0.08
+      user_overrides: 2
+      veto_rate: 0.15
 
-      "routing_weight": 1.15,
+    routing_weight: 1.15
 
-      "recent_performance": {
-        "last_7_days": {
-          "count": 8,
-          "success_rate": 0.96,
-          "trend": "up"
-        },
-        "last_30_days": {
-          "count": 25,
-          "success_rate": 0.92,
-          "trend": "stable"
-        }
-      },
+    recent_performance:
+      last_7_days:
+        count: 8
+        success_rate: 0.96
+        trend: up
+      last_30_days:
+        count: 25
+        success_rate: 0.92
+        trend: stable
 
-      "last_updated": "2025-01-14T10:30:00Z"
-    }
-  }
-}
+    last_updated: "2025-01-14T10:30:00Z"
 ```
 
 ## Integration Points

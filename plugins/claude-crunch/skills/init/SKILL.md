@@ -33,18 +33,18 @@ Starts the initialization wizard or resumes from where you left off.
 
 The init process has 10 phases that can be resumed if interrupted:
 
-| Phase | Name | Description |
-|-------|------|-------------|
-| 1 | Project Info | Gather project name and description |
-| 2 | CI Platform | Select GitHub/GitLab/Gitea, repo info, tools |
-| 3 | Configuration | Environment variables, feature flags |
-| 4 | Deployment | Staging/Production URLs and infrastructure |
-| 5 | Generate CLAUDE.md | Combine templates with collected data |
-| 6 | Vault MCP | Guide installation and configuration |
-| 7 | CI MCP | Guide installation and configuration |
-| 8 | Secrets | Configure required secrets in Vault |
-| 9 | Setup CI Issue | Create and crunch initial issue |
-| 10 | Verify Checklist | Final verification and cleanup |
+| Phase | Name               | Description                                  |
+| ----- | ------------------ | -------------------------------------------- |
+| 1     | Project Info       | Gather project name and description          |
+| 2     | CI Platform        | Select GitHub/GitLab/Gitea, repo info, tools |
+| 3     | Configuration      | Environment variables, feature flags         |
+| 4     | Deployment         | Staging/Production URLs and infrastructure   |
+| 5     | Generate CLAUDE.md | Combine templates with collected data        |
+| 6     | Vault MCP          | Guide installation and configuration         |
+| 7     | CI MCP             | Guide installation and configuration         |
+| 8     | Secrets            | Configure required secrets in Vault          |
+| 9     | Setup CI Issue     | Create and crunch initial issue              |
+| 10    | Verify Checklist   | Final verification and cleanup               |
 
 ## Resume Support
 
@@ -127,10 +127,10 @@ Project initialization finished. You're ready to start development!
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Templates not found | Report error, abort |
-| MCP installation fails | Offer retry, skip, or help |
-| Secret configuration fails | Mark as pending, continue |
-| Issue creation fails | Report error, offer retry |
-| Checklist incomplete | Keep progress file, report status |
+| Error                      | Action                            |
+| -------------------------- | --------------------------------- |
+| Templates not found        | Report error, abort               |
+| MCP installation fails     | Offer retry, skip, or help        |
+| Secret configuration fails | Mark as pending, continue         |
+| Issue creation fails       | Report error, offer retry         |
+| Checklist incomplete       | Keep progress file, report status |

@@ -86,22 +86,22 @@ Created the following child issues:
 
 Every DOD item MUST be designed for autonomous E2E validation. Items requiring human judgment are NOT acceptable. See `templates/5-e2e-testability.md` for full guidelines.
 
-| Acceptable | Not Acceptable |
-|------------|----------------|
-| `curl /api/users/1` returns 200 | "User API works" |
-| No errors in last 5min logs | "No bugs" |
-| P99 latency < 200ms | "Performance is good" |
-| `/health` returns `status: ok` | "System is stable" |
+| Acceptable                      | Not Acceptable        |
+| ------------------------------- | --------------------- |
+| `curl /api/users/1` returns 200 | "User API works"      |
+| No errors in last 5min logs     | "No bugs"             |
+| P99 latency < 200ms             | "Performance is good" |
+| `/health` returns `status: ok`  | "System is stable"    |
 
 **Incremental Development Requirement:**
 
 Feature specifications MUST include milestone breakdown from simplest testable version to complete solution. Each milestone must have its own testable DOD subset. See `templates/5a-incremental-development.md` for full guidelines.
 
-| Milestone | Content Required |
-|-----------|------------------|
-| M0 | Simplest happy path + 1 test |
-| M1-N | Incremental complexity layers + tests |
-| Final | Complete feature + full coverage |
+| Milestone | Content Required                      |
+| --------- | ------------------------------------- |
+| M0        | Simplest happy path + 1 test          |
+| M1-N      | Incremental complexity layers + tests |
+| Final     | Complete feature + full coverage      |
 
 ### Task Domains
 

@@ -211,36 +211,30 @@ For HIGH severity vetoes, users can override:
 
 ## Veto Log
 
-All vetoes are logged to `.claude/acp/veto-log.json`:
+All vetoes are logged to `.claude/acp/veto-log.yaml`:
 
-```json
-{
-  "vetoes": [
-    {
-      "id": "VETO-20250114-a3f2",
-      "timestamp": "2025-01-14T10:30:00Z",
-      "issue_number": 42,
-      "veto_agent": "security-analyst",
-      "severity": "HIGH",
-      "target_summary": "Skip rate limiting for MVP",
-      "outcome": "overridden",
-      "override_by": "user",
-      "follow_up_issue": "#43"
-    }
-  ],
-  "statistics": {
-    "total_vetoes": 15,
-    "critical": 5,
-    "high": 10,
-    "overridden": 2,
-    "by_category": {
-      "injection": 3,
-      "auth": 4,
-      "crypto": 2,
-      "exposure": 6
-    }
-  }
-}
+```yaml
+vetoes:
+  - id: VETO-20250114-a3f2
+    timestamp: "2025-01-14T10:30:00Z"
+    issue_number: 42
+    veto_agent: security-analyst
+    severity: HIGH
+    target_summary: Skip rate limiting for MVP
+    outcome: overridden
+    override_by: user
+    follow_up_issue: "#43"
+
+statistics:
+  total_vetoes: 15
+  critical: 5
+  high: 10
+  overridden: 2
+  by_category:
+    injection: 3
+    auth: 4
+    crypto: 2
+    exposure: 6
 ```
 
 ## Non-Vetoable Decisions

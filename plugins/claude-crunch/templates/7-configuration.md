@@ -95,6 +95,7 @@ output_dir: /var/lib/app/production
 > **See [Secret Management section](#secret-management-1) for detailed secret handling.**
 
 Secrets are managed separately from configuration. Choose your secret management approach:
+
 - **Vault** - Enterprise-grade centralized secret management
 - **SOPS+age** - File-based encryption for simpler setups
 

@@ -51,13 +51,13 @@ def route_to_agent(task, candidates, knowledge_base):
 
 ### Score Components
 
-| Component | Weight | Source | Range |
-|-----------|--------|--------|-------|
-| Capability match | 30% | Agent contract | 0.0 - 1.0 |
-| Performance score | 50% | Knowledge base metrics | 0.0 - 1.0 |
-| Routing weight | 10% | Calculated from metrics | 0.5 - 2.0 |
-| Trend boost | +/-10% | Recent 7-day performance | -0.1 to +0.1 |
-| Load penalty | -10% | Current active tasks | 0 or -0.1 |
+| Component         | Weight | Source                   | Range        |
+| ----------------- | ------ | ------------------------ | ------------ |
+| Capability match  | 30%    | Agent contract           | 0.0 - 1.0    |
+| Performance score | 50%    | Knowledge base metrics   | 0.0 - 1.0    |
+| Routing weight    | 10%    | Calculated from metrics  | 0.5 - 2.0    |
+| Trend boost       | +/-10% | Recent 7-day performance | -0.1 to +0.1 |
+| Load penalty      | -10%   | Current active tasks     | 0 or -0.1    |
 
 ### Capability Match
 
@@ -115,13 +115,13 @@ def confidence_from_count(count):
 
 ### Condition-Based Fallbacks
 
-| Condition | Action | Rationale |
-|-----------|--------|-----------|
-| Best score < 60% | Try backup agent | Primary agent may be struggling |
-| All scores < 60% | Escalate to orchestrator | Need coordination |
-| No specialist for file type | Use system-architect | General-purpose fallback |
-| Agent timed out previously | Prefer different agent | Avoid repeated timeouts |
-| Agent had recent failure | Reduce priority | Investigate before reusing |
+| Condition                   | Action                   | Rationale                       |
+| --------------------------- | ------------------------ | ------------------------------- |
+| Best score < 60%            | Try backup agent         | Primary agent may be struggling |
+| All scores < 60%            | Escalate to orchestrator | Need coordination               |
+| No specialist for file type | Use system-architect     | General-purpose fallback        |
+| Agent timed out previously  | Prefer different agent   | Avoid repeated timeouts         |
+| Agent had recent failure    | Reduce priority          | Investigate before reusing      |
 
 ### Fallback Implementation
 
@@ -146,15 +146,15 @@ def apply_fallback_rules(task, candidates, best_agent, best_score):
 
 ### Backup Agent Mapping
 
-| Primary Agent | Backup Agent | Condition |
-|---------------|--------------|-----------|
-| security-analyst | system-architect | Non-critical security |
-| dev-python | reviewer | Complex Python issue |
-| dev-react | reviewer | Complex frontend issue |
-| dev-go | reviewer | Complex Go issue |
-| dev-cpp | system-architect | Complex C++ issue |
-| qa-engineer | reviewer | Test-related issue |
-| techwriter | reviewer | Documentation issue |
+| Primary Agent    | Backup Agent     | Condition              |
+| ---------------- | ---------------- | ---------------------- |
+| security-analyst | system-architect | Non-critical security  |
+| dev-python       | reviewer         | Complex Python issue   |
+| dev-react        | reviewer         | Complex frontend issue |
+| dev-go           | reviewer         | Complex Go issue       |
+| dev-cpp          | system-architect | Complex C++ issue      |
+| qa-engineer      | reviewer         | Test-related issue     |
+| techwriter       | reviewer         | Documentation issue    |
 
 ## Learning Feedback Loop
 
@@ -206,55 +206,48 @@ def detect_routing_patterns(agent, domain, outcome):
 
 ## Configuration Options
 
-### In `.claude/routing-config.json`:
+### In `.claude/routing-config.yaml`:
 
-```json
-{
-  "routing": {
-    "minimum_score_threshold": 0.6,
-    "capability_weight": 0.3,
-    "performance_weight": 0.5,
-    "routing_weight_factor": 0.1,
-    "enable_trend_boost": true,
-    "enable_load_balancing": true,
-    "fallback_enabled": true,
-    "escalation_threshold": 0.5
-  },
-  "overrides": {
-    "domain:security": {
-      "preferred_agent": "security-analyst",
-      "minimum_score_threshold": 0.7
-    },
-    "phase:implementing": {
-      "load_balancing_disabled": true
-    }
-  },
-  "exclusions": {
-    "dev-cpp": {
-      "domains": ["frontend"],
-      "reason": "Not applicable to frontend work"
-    }
-  }
-}
+```yaml
+routing:
+  minimum_score_threshold: 0.6
+  capability_weight: 0.3
+  performance_weight: 0.5
+  routing_weight_factor: 0.1
+  enable_trend_boost: true
+  enable_load_balancing: true
+  fallback_enabled: true
+  escalation_threshold: 0.5
+
+overrides:
+  "domain:security":
+    preferred_agent: security-analyst
+    minimum_score_threshold: 0.7
+  "phase:implementing":
+    load_balancing_disabled: true
+
+exclusions:
+  dev-cpp:
+    domains:
+      - frontend
+    reason: Not applicable to frontend work
 ```
 
 ### Per-Domain Routing Rules
 
-```json
-{
-  "domain_routing": {
-    "security": {
-      "required_agent": "security-analyst",
-      "secondary_agents": ["system-architect", "reviewer"],
-      "minimum_review": true
-    },
-    "infrastructure": {
-      "required_agent": "devops-engineer",
-      "secondary_agents": ["system-architect"],
-      "minimum_review": false
-    }
-  }
-}
+```yaml
+domain_routing:
+  security:
+    required_agent: security-analyst
+    secondary_agents:
+      - system-architect
+      - reviewer
+    minimum_review: true
+  infrastructure:
+    required_agent: devops-engineer
+    secondary_agents:
+      - system-architect
+    minimum_review: false
 ```
 
 ## Routing Metrics
@@ -271,7 +264,7 @@ Track routing effectiveness:
     "success_rate_by_method": {
       "first_choice": 0.95,
       "fallback": 0.82,
-      "escalation": 0.70
+      "escalation": 0.7
     },
     "by_domain": {
       "security": {
@@ -319,6 +312,7 @@ Enable routing debug mode:
 ```
 
 Output includes:
+
 - All candidates considered
 - Score breakdown for each
 - Fallback decisions made

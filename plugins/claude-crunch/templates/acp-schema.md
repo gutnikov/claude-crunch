@@ -258,36 +258,33 @@ Example: MSG-1705234567890-a3f2b7c9
 
 ## Message Log
 
-Messages are logged to `.claude/acp/message-log.json`:
+Messages are logged to `.claude/acp/message-log.yaml`:
 
-```json
-{
-  "version": "1.0",
-  "session_id": "{session_uuid}",
-  "issue_number": 42,
-  "started_at": "ISO-8601",
-  "messages": [
-    {
-      "id": "MSG-...",
-      "type": "REQUEST",
-      "from": "orchestrator",
-      "to": "security-analyst",
-      "timestamp": "...",
-      "summary": "Brief summary for log"
-    }
-  ],
-  "pending": ["MSG-ids-awaiting-response"],
-  "completed": ["MSG-ids-completed"],
-  "conflicts": [
-    {
-      "id": "CONF-001",
-      "agents": ["agent_a", "agent_b"],
-      "topic": "What they disagree on",
-      "status": "pending|resolved",
-      "resolution": null
-    }
-  ]
-}
+```yaml
+version: "1.0"
+session_id: "{session_uuid}"
+issue_number: 42
+started_at: "ISO-8601"
+messages:
+  - id: "MSG-..."
+    type: REQUEST
+    from: orchestrator
+    to: security-analyst
+    timestamp: "..."
+    summary: Brief summary for log
+
+pending:
+  - MSG-ids-awaiting-response
+completed:
+  - MSG-ids-completed
+conflicts:
+  - id: CONF-001
+    agents:
+      - agent_a
+      - agent_b
+    topic: What they disagree on
+    status: pending|resolved
+    resolution: null
 ```
 
 ---

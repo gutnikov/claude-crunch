@@ -5,6 +5,7 @@ This document defines how the orchestrate skill coordinates multi-agent workflow
 ## Overview
 
 The orchestration workflow consists of 6 phases:
+
 1. **Analysis** - Assess issue complexity and requirements
 2. **Composition** - Select optimal team of agents
 3. **Planning** - Build execution graph with dependencies
@@ -358,11 +359,13 @@ After each batch:
 ### Execution Patterns
 
 **Sequential Execution** (default for dependencies):
+
 ```
 Task A completes → Start Task B → Task B completes → Start Task C
 ```
 
 **Parallel Execution** (no dependencies):
+
 ```
 Task A starts ─┐
 Task B starts ─┼─ All complete → Continue
@@ -370,6 +373,7 @@ Task C starts ─┘
 ```
 
 **Competitive Execution** (best solution wins):
+
 ```
 Approach A (architect) ─┐
                         ├─ Compare → Select winner → Apply

@@ -26,7 +26,7 @@ The `/analyze` skill generates reports from the knowledge base to surface patter
 ### Phase 2: Load Knowledge Base
 
 ```
-1. Check .claude/knowledge/index.json exists
+1. Check .claude/knowledge/index.yaml exists
    IF not: Report "Knowledge base empty"
 
 2. Load full index
@@ -234,15 +234,18 @@ Route to appropriate report generator based on type.
 **Period**: {date range} | **Metric**: {value}
 
 ### Section 1
+
 | Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
-| data | data | data |
+| -------- | -------- | -------- |
+| data     | data     | data     |
 
 ### Section 2
+
 - Point 1
 - Point 2
 
 ### Recommendations
+
 1. **Action 1** - reason
 2. **Action 2** - reason
 ```
@@ -312,12 +315,12 @@ Overall Debt Score (0-100):
 
 ## Error Handling
 
-| Condition | Handling |
-|-----------|----------|
-| Empty knowledge base | Report "No data available" |
-| No matching entries | Report "No entries match filters" |
-| Insufficient data for trends | Show "N/A" for trend |
-| Missing agent metrics | Skip effectiveness calculations |
+| Condition                    | Handling                          |
+| ---------------------------- | --------------------------------- |
+| Empty knowledge base         | Report "No data available"        |
+| No matching entries          | Report "No entries match filters" |
+| Insufficient data for trends | Show "N/A" for trend              |
+| Missing agent metrics        | Skip effectiveness calculations   |
 
 ---
 

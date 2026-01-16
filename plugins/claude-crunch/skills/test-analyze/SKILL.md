@@ -15,16 +15,16 @@ Perform comprehensive test quality analysis including coverage gaps, assertion q
 
 ### Parameters
 
-| Parameter | Short | Description |
-|-----------|-------|-------------|
-| `--coverage` | `-c` | Focus on coverage analysis |
-| `--quality` | `-q` | Focus on test quality assessment |
-| `--flaky` | `-f` | Focus on flaky test detection |
-| `--mutation` | `-m` | Apply mutation testing concepts |
-| `--threshold` | `-t` | Coverage threshold to check (default: from CLAUDE.md) |
-| `--issue` | `-i` | Link analysis to issue number |
-| `--output` | `-o` | Output format: `markdown` (default) or `json` |
-| `--verbose` | `-v` | Include detailed findings with code snippets |
+| Parameter     | Short | Description                                           |
+| ------------- | ----- | ----------------------------------------------------- |
+| `--coverage`  | `-c`  | Focus on coverage analysis                            |
+| `--quality`   | `-q`  | Focus on test quality assessment                      |
+| `--flaky`     | `-f`  | Focus on flaky test detection                         |
+| `--mutation`  | `-m`  | Apply mutation testing concepts                       |
+| `--threshold` | `-t`  | Coverage threshold to check (default: from CLAUDE.md) |
+| `--issue`     | `-i`  | Link analysis to issue number                         |
+| `--output`    | `-o`  | Output format: `markdown` (default) or `json`         |
+| `--verbose`   | `-v`  | Include detailed findings with code snippets          |
 
 ### Path Argument
 
@@ -49,6 +49,7 @@ Analyzes test coverage and identifies gaps.
 ```
 
 **Output includes**:
+
 - Current line and branch coverage percentages
 - Uncovered files and functions
 - Critical path coverage assessment
@@ -65,6 +66,7 @@ Evaluates test quality beyond coverage numbers.
 ```
 
 **Output includes**:
+
 - Assertion meaningfulness score (0-100)
 - Test isolation assessment
 - Test naming quality
@@ -81,6 +83,7 @@ Identifies tests with non-determinism indicators.
 ```
 
 **Output includes**:
+
 - Tests using sleep/delay
 - Tests with timing sensitivity
 - Tests with shared state
@@ -97,6 +100,7 @@ Applies mutation testing principles without running actual mutations.
 ```
 
 **Output includes**:
+
 - Assertions that would survive mutations
 - Dead code in test coverage
 - Trivial assertions (always pass)
@@ -123,30 +127,34 @@ When no mode specified, runs all analyses:
 **Test Files**: 24
 
 ### Coverage
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| Lines | 82% | 80% | PASS |
-| Branches | 74% | 75% | FAIL |
-| Functions | 88% | 80% | PASS |
+
+| Metric    | Current | Target | Status |
+| --------- | ------- | ------ | ------ |
+| Lines     | 82%     | 80%    | PASS   |
+| Branches  | 74%     | 75%    | FAIL   |
+| Functions | 88%     | 80%    | PASS   |
 
 ### Quality Score: 72/100
 
-| Aspect | Score | Issues |
-|--------|-------|--------|
+| Aspect            | Score  | Issues             |
+| ----------------- | ------ | ------------------ |
 | Assertion Quality | 78/100 | 12 weak assertions |
-| Test Isolation | 85/100 | 3 isolation issues |
-| Determinism | 68/100 | 8 flaky indicators |
-| Readability | 75/100 | 15 naming issues |
+| Test Isolation    | 85/100 | 3 isolation issues |
+| Determinism       | 68/100 | 8 flaky indicators |
+| Readability       | 75/100 | 15 naming issues   |
 
 ### Critical Gaps
+
 1. **src/auth/handler.ts:45-60** - No tests for error handling path
 2. **src/payments/processor.ts** - 0% coverage on refund logic
 
 ### Flaky Test Candidates
+
 1. `auth.test.ts: should timeout on slow response` - uses setTimeout
 2. `cache.test.ts: should expire entries` - time-dependent
 
 ### Recommended Actions
+
 1. Add error handling tests for auth handler - Priority: HIGH
 2. Fix timing dependency in auth timeout test - Priority: HIGH
 3. Add branch coverage for payment refunds - Priority: MEDIUM
@@ -263,12 +271,12 @@ The skill can fetch coverage reports from CI artifacts.
 
 ### Supported Coverage Formats
 
-| Format | File Pattern | Tools |
-|--------|--------------|-------|
-| LCOV | `lcov.info` | Jest, c8, nyc |
-| Cobertura | `coverage.xml` | pytest-cov, JaCoCo |
-| JSON Summary | `coverage-summary.json` | Jest |
-| Go Coverage | `coverage.out` | go test |
+| Format       | File Pattern            | Tools              |
+| ------------ | ----------------------- | ------------------ |
+| LCOV         | `lcov.info`             | Jest, c8, nyc      |
+| Cobertura    | `coverage.xml`          | pytest-cov, JaCoCo |
+| JSON Summary | `coverage-summary.json` | Jest               |
+| Go Coverage  | `coverage.out`          | go test            |
 
 ### Coverage Lookup Order
 
@@ -291,5 +299,6 @@ If coverage fails, the workflow remains at IMPLEMENTING until tests are fixed.
 ### Knowledge Integration
 
 Results are stored for trending:
+
 - `.claude/test-analysis/{date}-{issue}.json`
 - Queryable via `/knowledge -t test-analysis`

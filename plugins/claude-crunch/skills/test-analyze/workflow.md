@@ -365,13 +365,13 @@ The Test Quality Reviewer (Agent #6) can invoke this skill:
 
 ## Error Handling
 
-| Condition | Action |
-|-----------|--------|
-| No tests found | Report warning, suggest test locations |
-| No coverage data | Continue with quality analysis, warn |
-| CI artifacts unavailable | Fall back to local analysis |
-| Parse error | Report specific error, continue partial |
-| Threshold not configured | Use defaults (80% line, 75% branch) |
+| Condition                | Action                                  |
+| ------------------------ | --------------------------------------- |
+| No tests found           | Report warning, suggest test locations  |
+| No coverage data         | Continue with quality analysis, warn    |
+| CI artifacts unavailable | Fall back to local analysis             |
+| Parse error              | Report specific error, continue partial |
+| Threshold not configured | Use defaults (80% line, 75% branch)     |
 
 ## Performance Considerations
 

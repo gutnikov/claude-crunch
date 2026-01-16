@@ -10,6 +10,7 @@ Coordinate agent collaboration for complex development tasks through structured 
 ## When Orchestration is Active
 
 Orchestration is automatically activated when:
+
 - Issue complexity score >= 5 (HIGH)
 - Issue spans 2+ domains
 - Previous attempt on the issue failed
@@ -23,14 +24,14 @@ Orchestration is automatically activated when:
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `issue_number` | int | Issue number to orchestrate (optional if already in crunch context) |
-| `--plan` | flag | Show execution plan without executing |
-| `--resume` | flag | Resume from latest checkpoint |
-| `--checkpoint <id>` | string | Resume from specific checkpoint |
-| `--team <agents>` | string | Override team composition (comma-separated) |
-| `--debug` | flag | Enable detailed orchestration logging |
+| Parameter           | Type   | Description                                                         |
+| ------------------- | ------ | ------------------------------------------------------------------- |
+| `issue_number`      | int    | Issue number to orchestrate (optional if already in crunch context) |
+| `--plan`            | flag   | Show execution plan without executing                               |
+| `--resume`          | flag   | Resume from latest checkpoint                                       |
+| `--checkpoint <id>` | string | Resume from specific checkpoint                                     |
+| `--team <agents>`   | string | Override team composition (comma-separated)                         |
+| `--debug`           | flag   | Enable detailed orchestration logging                               |
 
 ## Examples
 
@@ -63,6 +64,7 @@ Forces specific agents to be included in the team.
 ### 1. Team Composition
 
 Dynamically selects agents based on:
+
 - Issue domains (security, frontend, infrastructure, etc.)
 - Complexity score
 - Historical agent effectiveness
@@ -71,6 +73,7 @@ Dynamically selects agents based on:
 ### 2. Execution Planning
 
 Creates dependency graphs for:
+
 - Sequential tasks (spec → implementation → review)
 - Parallel tasks (multiple reviewers simultaneously)
 - Approval gates (security review before deploy)
@@ -78,6 +81,7 @@ Creates dependency graphs for:
 ### 3. Conflict Resolution
 
 Handles disagreements through:
+
 - Structured debate protocol
 - Weighted voting based on expertise
 - Veto authority for security matters
@@ -86,6 +90,7 @@ Handles disagreements through:
 ### 4. Progress Management
 
 Maintains workflow state through:
+
 - Automatic checkpoints at key transitions
 - Recovery from session interruptions
 - Progress reporting to issue body
@@ -107,6 +112,7 @@ When `/crunch` detects HIGH+ complexity, it automatically invokes orchestration:
 ## Output
 
 Orchestration provides:
+
 - Team composition summary
 - Execution graph visualization
 - Progress updates as batches complete

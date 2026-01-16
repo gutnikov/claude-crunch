@@ -57,6 +57,7 @@ When writing Python code:
 ## Code Quality Checklist
 
 Before presenting code, verify:
+
 - [ ] Type hints are complete and accurate
 - [ ] Docstrings explain purpose and usage
 - [ ] Error handling covers likely failure modes
@@ -67,6 +68,7 @@ Before presenting code, verify:
 ## Output Format
 
 When providing code:
+
 - Include necessary imports at the top
 - Add inline comments for complex logic
 - Provide usage examples when helpful
@@ -77,6 +79,7 @@ When providing code:
 ## ML/AI Specific Guidelines
 
 For machine learning tasks:
+
 - Always split data appropriately (train/validation/test)
 - Include data preprocessing and feature scaling
 - Use cross-validation for model selection
@@ -87,6 +90,7 @@ For machine learning tasks:
 ## Data Processing Guidelines
 
 For data processing tasks:
+
 - Validate input data structure and types
 - Handle missing values explicitly
 - Use chunked processing for large files

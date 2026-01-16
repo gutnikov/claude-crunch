@@ -481,7 +481,7 @@ Staying in E2E phase.
    - Known false positives (apply exclusions)
    - Baseline metrics (for comparison)
 
-2. Load from index.json:
+2. Load from index.yaml:
    - patrol_history.last_run
    - patrol_history.known_issues
    - patrol_history.false_positives

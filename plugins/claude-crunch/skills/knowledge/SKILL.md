@@ -15,24 +15,24 @@ Search and retrieve relevant knowledge from the project's knowledge base.
 
 ### Parameters
 
-| Parameter | Short | Description |
-|-----------|-------|-------------|
-| `--query` | `-q` | Search query (semantic search) |
-| `--type` | `-t` | Filter: `decision`, `resolution`, `pattern`, `feedback`, `all` |
-| `--domain` | `-d` | Filter by domain (e.g., `security`, `frontend`) |
-| `--since` | | Only entries after date (YYYY-MM-DD) |
-| `--limit` | `-l` | Max results (default: 5) |
-| `--related` | `-r` | Find entries related to issue number or entry ID |
-| `--brief` | | Generate synthesized context brief |
+| Parameter   | Short | Description                                                    |
+| ----------- | ----- | -------------------------------------------------------------- |
+| `--query`   | `-q`  | Search query (semantic search)                                 |
+| `--type`    | `-t`  | Filter: `decision`, `resolution`, `pattern`, `feedback`, `all` |
+| `--domain`  | `-d`  | Filter by domain (e.g., `security`, `frontend`)                |
+| `--since`   |       | Only entries after date (YYYY-MM-DD)                           |
+| `--limit`   | `-l`  | Max results (default: 5)                                       |
+| `--related` | `-r`  | Find entries related to issue number or entry ID               |
+| `--brief`   |       | Generate synthesized context brief                             |
 
 ### Query Modes
 
-| Mode | Example | Use Case |
-|------|---------|----------|
-| Semantic | `/knowledge "authentication race conditions"` | Find conceptually related |
-| By type | `/knowledge -t pattern -d security` | Browse patterns in domain |
-| Related | `/knowledge -r 42` | Find knowledge linked to issue #42 |
-| Brief | `/knowledge --brief -r 55` | Context brief for issue #55 |
+| Mode     | Example                                       | Use Case                           |
+| -------- | --------------------------------------------- | ---------------------------------- |
+| Semantic | `/knowledge "authentication race conditions"` | Find conceptually related          |
+| By type  | `/knowledge -t pattern -d security`           | Browse patterns in domain          |
+| Related  | `/knowledge -r 42`                            | Find knowledge linked to issue #42 |
+| Brief    | `/knowledge --brief -r 55`                    | Context brief for issue #55        |
 
 ## Query Syntax
 
@@ -81,6 +81,7 @@ Generates a synthesized context brief for use before starting work on issue #55.
 ---
 
 ### 1. [Resolution] KE-resolution-20250114-b7c9 (relevance: 95)
+
 **Issue**: #42 - Race condition in token refresh causes logout
 **Root Cause**: Concurrent refresh requests without synchronization
 **Solution**: Mutex protection for token operations
@@ -89,6 +90,7 @@ Generates a synthesized context brief for use before starting work on issue #55.
 ---
 
 ### 2. [Pattern] KE-pattern-20250114-c8d3 (relevance: 88)
+
 **Name**: Token Operation Mutex
 **Type**: Pattern (recommended practice)
 **Description**: All token operations should be protected by mutex
@@ -97,6 +99,7 @@ Generates a synthesized context brief for use before starting work on issue #55.
 ---
 
 ### 3. [Decision] KE-decision-20250112-x1y2 (relevance: 72)
+
 **Title**: Use refresh token rotation
 **Decision**: Implement sliding-window refresh token rotation
 **Relevance**: Establishes auth token handling architecture
@@ -108,22 +111,28 @@ Generates a synthesized context brief for use before starting work on issue #55.
 ## Context Brief for Issue #55
 
 ### Summary
+
 This issue involves authentication token handling. Found 4 highly relevant entries.
 
 ### Must-Know
+
 1. **Token Operation Mutex** (pattern): All token ops need mutex protection
 2. **ADR: Refresh Token Rotation** (decision): Current auth architecture
 
 ### Related Past Issues
+
 - **#42**: Similar race condition - solved with mutex (4h resolution)
 - **#18**: Auth flow rework - see architectural decisions
 
 ### Anti-Patterns to Avoid
+
 - Direct token manipulation without service abstraction
 - Assuming single-threaded token access
 
 ### Recommended Agents
+
 Based on effectiveness data:
+
 - security-analyst: 94% success on auth issues (23 issues)
 - dev-react: 87% on frontend auth (8 issues)
 ```
@@ -229,8 +238,8 @@ Where:
 
 The `/knowledge` skill is automatically invoked:
 
-| Trigger | Query Type |
-|---------|------------|
-| ENRICH entry | `--brief -r {issue}` for context |
+| Trigger            | Query Type                                    |
+| ------------------ | --------------------------------------------- |
+| ENRICH entry       | `--brief -r {issue}` for context              |
 | IMPLEMENTING entry | `-t pattern -t resolution` for affected files |
-| Before code review | `-t feedback -d {domain}` for common issues |
+| Before code review | `-t feedback -d {domain}` for common issues   |

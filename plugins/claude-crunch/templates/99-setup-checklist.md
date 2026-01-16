@@ -53,8 +53,8 @@
 
 - [ ] Filebase initialized (`/ci-filebase init`)
 - [ ] `.claude/ci-filebase/` directory created
-- [ ] `labels.json` created with default workflow labels
-- [ ] `counter.json` initialized
+- [ ] `labels.yaml` created with default workflow labels
+- [ ] `counter.yaml` initialized
 - [ ] Test issue created (`/ci-filebase issue create "Test"`)
 - [ ] Test issue labels work (`/ci-filebase issue label 1 type:feature`)
 
@@ -68,7 +68,7 @@
 - [ ] Docker CI initialized (`/ci-filebase docker init`)
 - [ ] `.claude/ci-filebase/docker/` directory created
 - [ ] `docker-compose.staging.yaml` generated
-- [ ] `ci-config.json` created with project commands
+- [ ] `ci-config.yaml` created with project commands
 - [ ] CI pipeline test passed (`/ci-filebase docker ci`)
 - [ ] Local staging deployment works (`/ci-filebase docker deploy staging`)
 - [ ] Health check passes (`/ci-filebase docker health`)
@@ -246,8 +246,8 @@ Once configured, Claude Code can use these LSP features:
 > **Note:** Orchestration is automatically enabled when issue complexity is HIGH (score >= 5) or spans multiple domains.
 
 - [ ] Review `templates/hierarchy-config.md` for agent tier structure
-- [ ] Customize agent routing weights in `.claude/routing-config.json` (if needed)
-- [ ] Configure checkpoint retention in `.claude/checkpoint-config.json` (if needed)
+- [ ] Customize agent routing weights in `.claude/routing-config.yaml` (if needed)
+- [ ] Configure checkpoint retention in `.claude/checkpoint-config.yaml` (if needed)
 - [ ] Review veto rules in `templates/veto-rules.md`
 
 #### Orchestration Directory Structure
@@ -255,14 +255,14 @@ Once configured, Claude Code can use these LSP features:
 ```
 .claude/
 ├── acp/
-│   ├── message-log.json       # ACP message history
-│   └── veto-log.json          # Veto decision history
+│   ├── message-log.yaml       # ACP message history
+│   └── veto-log.yaml          # Veto decision history
 ├── crunch/{issue}/
 │   └── checkpoints/           # Workflow checkpoints
 ├── knowledge/
-│   └── index.json             # Includes agent_metrics
-├── routing-config.json        # Adaptive routing config
-└── checkpoint-config.json     # Checkpoint settings
+│   └── index.yaml             # Includes agent_metrics
+├── routing-config.yaml        # Adaptive routing config
+└── checkpoint-config.yaml     # Checkpoint settings
 ```
 
 ### Final Verification

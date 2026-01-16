@@ -181,7 +181,7 @@ Where to store baseline metrics for comparison:
 
 ```
 baseline:
-  storage: .claude/patrol/baselines.json
+  storage: .claude/patrol/baselines.yaml
   refresh_interval: 24h
   metrics:
     - http_request_duration_seconds

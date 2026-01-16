@@ -53,30 +53,30 @@ The execution graph represents tasks and their dependencies, enabling the orches
 
 ### Status Values
 
-| Status | Description |
-|--------|-------------|
-| `pending` | Not yet scheduled |
-| `queued` | Ready to run, waiting for executor |
-| `running` | Currently executing |
-| `complete` | Successfully finished |
-| `failed` | Execution failed |
-| `skipped` | Skipped due to dependency failure |
+| Status     | Description                        |
+| ---------- | ---------------------------------- |
+| `pending`  | Not yet scheduled                  |
+| `queued`   | Ready to run, waiting for executor |
+| `running`  | Currently executing                |
+| `complete` | Successfully finished              |
+| `failed`   | Execution failed                   |
+| `skipped`  | Skipped due to dependency failure  |
 
 ### Node Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | Yes | Unique task identifier |
-| `agent` | string | Yes | Agent assigned to task |
-| `action` | string | Yes | Action type from ACP contracts |
-| `status` | enum | Yes | Current execution status |
-| `dependencies` | array | Yes | Task IDs this depends on |
-| `outputs` | array | Yes | Keys for outputs produced |
-| `priority` | enum | No | Execution priority |
-| `timeout_ms` | int | No | Task timeout override |
-| `started_at` | string | No | ISO-8601 start time |
-| `completed_at` | string | No | ISO-8601 completion time |
-| `result` | object | No | Task result after completion |
+| Field          | Type   | Required | Description                    |
+| -------------- | ------ | -------- | ------------------------------ |
+| `id`           | string | Yes      | Unique task identifier         |
+| `agent`        | string | Yes      | Agent assigned to task         |
+| `action`       | string | Yes      | Action type from ACP contracts |
+| `status`       | enum   | Yes      | Current execution status       |
+| `dependencies` | array  | Yes      | Task IDs this depends on       |
+| `outputs`      | array  | Yes      | Keys for outputs produced      |
+| `priority`     | enum   | No       | Execution priority             |
+| `timeout_ms`   | int    | No       | Task timeout override          |
+| `started_at`   | string | No       | ISO-8601 start time            |
+| `completed_at` | string | No       | ISO-8601 completion time       |
+| `result`       | object | No       | Task result after completion   |
 
 ## Edge Types
 
@@ -212,19 +212,35 @@ Batch 4: [task-005, task-006]    → Run in parallel
     }
   ],
   "edges": [
-    {"from": "investigate", "to": "create_spec", "type": "data", "data_key": "investigation_report"},
-    {"from": "investigate", "to": "create_test_plan", "type": "data", "data_key": "investigation_report"},
-    {"from": "create_spec", "to": "security_review", "type": "data", "data_key": "spec_document"}
+    {
+      "from": "investigate",
+      "to": "create_spec",
+      "type": "data",
+      "data_key": "investigation_report"
+    },
+    {
+      "from": "investigate",
+      "to": "create_test_plan",
+      "type": "data",
+      "data_key": "investigation_report"
+    },
+    {
+      "from": "create_spec",
+      "to": "security_review",
+      "type": "data",
+      "data_key": "spec_document"
+    }
   ],
   "batches": [
-    {"batch_id": 1, "tasks": ["inject_knowledge", "investigate"]},
-    {"batch_id": 2, "tasks": ["create_spec", "create_test_plan"]},
-    {"batch_id": 3, "tasks": ["security_review"]}
+    { "batch_id": 1, "tasks": ["inject_knowledge", "investigate"] },
+    { "batch_id": 2, "tasks": ["create_spec", "create_test_plan"] },
+    { "batch_id": 3, "tasks": ["security_review"] }
   ]
 }
 ```
 
 Visual representation:
+
 ```
         ┌─────────────────┐
         │inject_knowledge │
@@ -264,30 +280,66 @@ Visual representation:
   "graph_id": "GRAPH-20250114-b4c5",
   "phase": "validation",
   "nodes": [
-    {"id": "r1", "agent": "claude-compliance", "action": "review_code", "dependencies": []},
-    {"id": "r2", "agent": "bug-scanner", "action": "review_code", "dependencies": []},
-    {"id": "r3", "agent": "git-history", "action": "review_code", "dependencies": []},
-    {"id": "r4", "agent": "prev-pr", "action": "review_code", "dependencies": []},
-    {"id": "r5", "agent": "comment-checker", "action": "review_code", "dependencies": []},
-    {"id": "r6", "agent": "test-quality", "action": "review_tests", "dependencies": []},
-    {"id": "merge", "agent": "orchestrator", "action": "merge_findings", "dependencies": ["r1", "r2", "r3", "r4", "r5", "r6"]}
+    {
+      "id": "r1",
+      "agent": "claude-compliance",
+      "action": "review_code",
+      "dependencies": []
+    },
+    {
+      "id": "r2",
+      "agent": "bug-scanner",
+      "action": "review_code",
+      "dependencies": []
+    },
+    {
+      "id": "r3",
+      "agent": "git-history",
+      "action": "review_code",
+      "dependencies": []
+    },
+    {
+      "id": "r4",
+      "agent": "prev-pr",
+      "action": "review_code",
+      "dependencies": []
+    },
+    {
+      "id": "r5",
+      "agent": "comment-checker",
+      "action": "review_code",
+      "dependencies": []
+    },
+    {
+      "id": "r6",
+      "agent": "test-quality",
+      "action": "review_tests",
+      "dependencies": []
+    },
+    {
+      "id": "merge",
+      "agent": "orchestrator",
+      "action": "merge_findings",
+      "dependencies": ["r1", "r2", "r3", "r4", "r5", "r6"]
+    }
   ],
   "edges": [
-    {"from": "r1", "to": "merge", "type": "data", "data_key": "findings"},
-    {"from": "r2", "to": "merge", "type": "data", "data_key": "findings"},
-    {"from": "r3", "to": "merge", "type": "data", "data_key": "findings"},
-    {"from": "r4", "to": "merge", "type": "data", "data_key": "findings"},
-    {"from": "r5", "to": "merge", "type": "data", "data_key": "findings"},
-    {"from": "r6", "to": "merge", "type": "data", "data_key": "findings"}
+    { "from": "r1", "to": "merge", "type": "data", "data_key": "findings" },
+    { "from": "r2", "to": "merge", "type": "data", "data_key": "findings" },
+    { "from": "r3", "to": "merge", "type": "data", "data_key": "findings" },
+    { "from": "r4", "to": "merge", "type": "data", "data_key": "findings" },
+    { "from": "r5", "to": "merge", "type": "data", "data_key": "findings" },
+    { "from": "r6", "to": "merge", "type": "data", "data_key": "findings" }
   ],
   "batches": [
-    {"batch_id": 1, "tasks": ["r1", "r2", "r3", "r4", "r5", "r6"]},
-    {"batch_id": 2, "tasks": ["merge"]}
+    { "batch_id": 1, "tasks": ["r1", "r2", "r3", "r4", "r5", "r6"] },
+    { "batch_id": 2, "tasks": ["merge"] }
   ]
 }
 ```
 
 Visual representation:
+
 ```
    Batch 1 (all parallel)
 ┌───────────────────────────────────────────────────────────────┐
@@ -359,12 +411,12 @@ async def execute_graph(graph, orchestrator):
 
 ### Failure Handling
 
-| Scenario | Action |
-|----------|--------|
-| Single task fails | Mark dependents as skipped, continue batch |
-| Critical task fails | Abort remaining batches, escalate |
-| Timeout | Retry once, then mark failed |
-| All batch tasks fail | Checkpoint and escalate |
+| Scenario             | Action                                     |
+| -------------------- | ------------------------------------------ |
+| Single task fails    | Mark dependents as skipped, continue batch |
+| Critical task fails  | Abort remaining batches, escalate          |
+| Timeout              | Retry once, then mark failed               |
+| All batch tasks fail | Checkpoint and escalate                    |
 
 ```python
 def handle_task_failure(node, graph):

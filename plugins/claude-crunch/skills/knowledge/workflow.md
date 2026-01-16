@@ -28,7 +28,7 @@ The `/knowledge` skill queries the project's knowledge base and returns relevant
 ### Phase 2: Load Knowledge Base
 
 ```
-1. Check for .claude/knowledge/index.json
+1. Check for .claude/knowledge/index.yaml
    - IF not exists: Report "Knowledge base empty"
 
 2. Load index into memory
@@ -135,11 +135,13 @@ The `/knowledge` skill queries the project's knowledge base and returns relevant
 ---
 
 ### {rank}. [{type}] {id} (relevance: {score})
+
 **{title_field}**: {value}
 **{key_field_1}**: {value}
 **{key_field_2}**: {value}
 
 ---
+
 [Repeat for each result]
 ```
 
@@ -149,18 +151,23 @@ The `/knowledge` skill queries the project's knowledge base and returns relevant
 ## Context Brief for Issue #{number}
 
 ### Summary
+
 {One sentence describing the issue domain and what knowledge was found}
 
 ### Must-Know
+
 {Numbered list of critical patterns and decisions}
 
 ### Related Past Issues
+
 {List of similar issues with outcomes and resolution times}
 
 ### Anti-Patterns to Avoid
+
 {List of anti-patterns applicable to this domain}
 
 ### Recommended Agents
+
 {Agent recommendations based on effectiveness data}
 ```
 
@@ -326,12 +333,12 @@ Enables agent effectiveness queries.
 
 ## Error Handling
 
-| Error | Handling |
-|-------|----------|
+| Error                    | Handling                                                        |
+| ------------------------ | --------------------------------------------------------------- |
 | Knowledge base not found | Report "Knowledge base empty. Use /learn to capture knowledge." |
-| No results found | Report "No matching entries. Try broader search." |
-| Invalid entry ID | Report "Entry not found: {id}" |
-| Issue not in index | Fall back to content-based search |
+| No results found         | Report "No matching entries. Try broader search."               |
+| Invalid entry ID         | Report "Entry not found: {id}"                                  |
+| Issue not in index       | Fall back to content-based search                               |
 
 ---
 

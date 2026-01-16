@@ -955,8 +955,8 @@ IF platform == "filebase":
   Run /ci-filebase init to create directory structure:
   - Creates .claude/ci-filebase/issues/
   - Creates .claude/ci-filebase/prs/
-  - Creates .claude/ci-filebase/labels.json
-  - Creates .claude/ci-filebase/counter.json
+  - Creates .claude/ci-filebase/labels.yaml
+  - Creates .claude/ci-filebase/counter.yaml
 
   Show: "Filebase initialized at .claude/ci-filebase/"
   Mark filebase_initialized = true
@@ -1008,7 +1008,7 @@ IF user selects "Yes":
   - Creates .claude/ci-filebase/docker/docker-compose.staging.yaml
   - Creates .claude/ci-filebase/docker/Dockerfile.staging (if needed)
   - Creates .claude/ci-filebase/docker/.env.staging
-  - Creates .claude/ci-filebase/docker/ci-config.json
+  - Creates .claude/ci-filebase/docker/ci-config.yaml
 
   Show:
     "Docker CI initialized!
@@ -1021,7 +1021,7 @@ IF user selects "Yes":
 
     Files created:
     - .claude/ci-filebase/docker/docker-compose.staging.yaml
-    - .claude/ci-filebase/docker/ci-config.json"
+    - .claude/ci-filebase/docker/ci-config.yaml"
 
   # Test CI pipeline
   AskUserQuestion: "Would you like to test the CI pipeline now?"
@@ -1035,7 +1035,7 @@ IF user selects "Yes":
       Show: "CI pipeline test passed!"
       Mark docker_ci_tested = true
     ELSE:
-      Show: "CI pipeline failed. You may need to adjust ci-config.json."
+      Show: "CI pipeline failed. You may need to adjust ci-config.yaml."
       Show error output
       Mark docker_ci_tested = false
 
@@ -1796,8 +1796,8 @@ This will:
    ```
    IF platform == "filebase":
      Check .claude/ci-filebase/ directory exists
-     Check .claude/ci-filebase/labels.json exists
-     Check .claude/ci-filebase/counter.json exists
+     Check .claude/ci-filebase/labels.yaml exists
+     Check .claude/ci-filebase/counter.yaml exists
      IF all exist: PASS
      ELSE: FAIL (run /ci-filebase init)
    ELSE IF phases.7_ci_mcp.data.tested == true:
@@ -1817,7 +1817,7 @@ This will:
      IF phases.7_ci_mcp.data.docker_ci_enabled == true:
        Check .claude/ci-filebase/docker/ directory exists
        Check .claude/ci-filebase/docker/docker-compose.staging.yaml exists
-       Check .claude/ci-filebase/docker/ci-config.json exists
+       Check .claude/ci-filebase/docker/ci-config.yaml exists
        IF all exist:
          # Optionally verify Docker is running
          Run: docker ps
@@ -1937,7 +1937,7 @@ Verified: /ci-filebase docker ci passed
 [x] Local staging works
 Verified: /ci-filebase docker deploy staging succeeded
 [x] Setup CI issue created
-Verified: Issue #1 exists in .claude/ci-filebase/issues/1.json
+Verified: Issue #1 exists in .claude/ci-filebase/issues/1.yaml
 [x] Setup CI issue crunched to ready-to-merge
 Verified: Issue #1 has label state:ready-to-merge
 ```

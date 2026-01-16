@@ -10,107 +10,99 @@ Checkpoints enable workflow persistence across sessions, failure recovery, and p
 
 ### Full Checkpoint Structure
 
-```json
-{
-  "checkpoint_id": "CP-{phase}-{timestamp}-{hash}",
-  "version": "1.0",
-  "created_at": "ISO-8601",
-  "issue_number": 42,
-  "session_id": "{session_uuid}",
+```yaml
+checkpoint_id: "CP-{phase}-{timestamp}-{hash}"
+version: "1.0"
+created_at: "ISO-8601"
+issue_number: 42
+session_id: "{session_uuid}"
 
-  "workflow_state": {
-    "current_phase": "enrich|ready|implementing|validation|docs",
-    "current_state_label": "state:enrich",
-    "phase_started_at": "ISO-8601",
-    "phase_attempt": 1
-  },
+workflow_state:
+  current_phase: enrich|ready|implementing|validation|docs
+  current_state_label: state:enrich
+  phase_started_at: "ISO-8601"
+  phase_attempt: 1
 
-  "issue_snapshot": {
-    "title": "Issue title",
-    "body": "Full issue body at checkpoint",
-    "labels": ["state:enrich", "type:feature", "domain:security"],
-    "assignees": [],
-    "branch": "feature/issue-42-jwt-refresh"
-  },
+issue_snapshot:
+  title: Issue title
+  body: Full issue body at checkpoint
+  labels:
+    - state:enrich
+    - type:feature
+    - domain:security
+  assignees: []
+  branch: feature/issue-42-jwt-refresh
 
-  "team_state": {
-    "team_id": "TEAM-20250114-a3f2",
-    "members": [
-      {
-        "agent": "orchestrator",
-        "role": "coordinator",
-        "status": "active",
-        "tasks_completed": 2,
-        "tasks_pending": 1
-      }
-    ]
-  },
+team_state:
+  team_id: TEAM-20250114-a3f2
+  members:
+    - agent: orchestrator
+      role: coordinator
+      status: active
+      tasks_completed: 2
+      tasks_pending: 1
 
-  "execution_graph": {
-    "graph_id": "GRAPH-20250114-a3f2",
-    "completed_batches": [1, 2],
-    "current_batch": 3,
-    "node_states": {}
-  },
+execution_graph:
+  graph_id: GRAPH-20250114-a3f2
+  completed_batches:
+    - 1
+    - 2
+  current_batch: 3
+  node_states: {}
 
-  "agent_outputs": {
-    "system-architect": {
-      "create_spec": {
-        "completed_at": "ISO-8601",
-        "output_summary": "Spec created for JWT refresh token feature",
-        "output_location": ".claude/crunch/42/spec.md"
-      }
-    }
-  },
+agent_outputs:
+  system-architect:
+    create_spec:
+      completed_at: "ISO-8601"
+      output_summary: Spec created for JWT refresh token feature
+      output_location: .claude/crunch/42/spec.md
 
-  "acp_state": {
-    "pending_messages": ["MSG-ids"],
-    "awaiting_response": ["MSG-ids"],
-    "conflicts_in_progress": ["CONF-ids"]
-  },
+acp_state:
+  pending_messages:
+    - MSG-ids
+  awaiting_response:
+    - MSG-ids
+  conflicts_in_progress:
+    - CONF-ids
 
-  "knowledge_context": {
-    "injected_entries": ["KE-ids"],
-    "captured_entries": ["KE-ids"],
-    "pending_captures": []
-  },
+knowledge_context:
+  injected_entries:
+    - KE-ids
+  captured_entries:
+    - KE-ids
+  pending_captures: []
 
-  "files_modified": [
-    {
-      "path": "src/auth/tokens.py",
-      "status": "modified",
-      "staged": true
-    }
-  ],
+files_modified:
+  - path: src/auth/tokens.py
+    status: modified
+    staged: true
 
-  "recovery_info": {
-    "can_resume": true,
-    "resume_from": "batch_3_task_1",
-    "prerequisites_met": true,
-    "warnings": []
-  }
-}
+recovery_info:
+  can_resume: true
+  resume_from: batch_3_task_1
+  prerequisites_met: true
+  warnings: []
 ```
 
 ## Checkpoint Triggers
 
 ### Automatic Triggers
 
-| Event | Checkpoint Type | Description |
-|-------|-----------------|-------------|
-| Phase transition | `phase_transition` | Before moving to next phase |
-| Batch completion | `batch_complete` | After each execution batch |
-| Agent completion | `agent_complete` | After significant agent output |
-| Conflict detected | `conflict_start` | Before debate begins |
-| Conflict resolved | `conflict_resolved` | After resolution applied |
+| Event             | Checkpoint Type     | Description                    |
+| ----------------- | ------------------- | ------------------------------ |
+| Phase transition  | `phase_transition`  | Before moving to next phase    |
+| Batch completion  | `batch_complete`    | After each execution batch     |
+| Agent completion  | `agent_complete`    | After significant agent output |
+| Conflict detected | `conflict_start`    | Before debate begins           |
+| Conflict resolved | `conflict_resolved` | After resolution applied       |
 
 ### Manual Triggers
 
-| Trigger | Checkpoint Type | Description |
-|---------|-----------------|-------------|
+| Trigger                 | Checkpoint Type  | Description                 |
+| ----------------------- | ---------------- | --------------------------- |
 | User interrupt (Ctrl+C) | `user_interrupt` | Immediate save on interrupt |
-| Session timeout | `session_end` | Before session terminates |
-| `/crunch --checkpoint` | `manual` | User-requested checkpoint |
+| Session timeout         | `session_end`    | Before session terminates   |
+| `/crunch --checkpoint`  | `manual`         | User-requested checkpoint   |
 
 ## Checkpoint Lifecycle
 
@@ -157,36 +149,29 @@ Checkpoints are stored in `.claude/crunch/{issue_number}/checkpoints/`:
 
 ```
 .claude/crunch/42/checkpoints/
-├── index.json                    # Checkpoint index
-├── CP-enrich-20250114-a3f2.json  # Individual checkpoints
-├── CP-enrich-20250114-b4c5.json
-└── latest -> CP-enrich-20250114-b4c5.json  # Symlink to latest
+├── index.yaml                    # Checkpoint index
+├── CP-enrich-20250114-a3f2.yaml  # Individual checkpoints
+├── CP-enrich-20250114-b4c5.yaml
+└── latest -> CP-enrich-20250114-b4c5.yaml  # Symlink to latest
 ```
 
 ### Index Structure
 
-```json
-{
-  "issue_number": 42,
-  "checkpoints": [
-    {
-      "checkpoint_id": "CP-enrich-20250114-a3f2",
-      "created_at": "2025-01-14T10:00:00Z",
-      "trigger": "phase_transition",
-      "phase": "enrich",
-      "can_resume": true
-    },
-    {
-      "checkpoint_id": "CP-enrich-20250114-b4c5",
-      "created_at": "2025-01-14T10:30:00Z",
-      "trigger": "batch_complete",
-      "phase": "enrich",
-      "can_resume": true
-    }
-  ],
-  "latest": "CP-enrich-20250114-b4c5",
-  "total_checkpoints": 2
-}
+```yaml
+issue_number: 42
+checkpoints:
+  - checkpoint_id: CP-enrich-20250114-a3f2
+    created_at: "2025-01-14T10:00:00Z"
+    trigger: phase_transition
+    phase: enrich
+    can_resume: true
+  - checkpoint_id: CP-enrich-20250114-b4c5
+    created_at: "2025-01-14T10:30:00Z"
+    trigger: batch_complete
+    phase: enrich
+    can_resume: true
+latest: CP-enrich-20250114-b4c5
+total_checkpoints: 2
 ```
 
 ## Recovery Process
@@ -253,14 +238,14 @@ def restore_graph_state(graph_checkpoint):
 
 ### Retention Policy
 
-| Checkpoint Type | Retention |
-|-----------------|-----------|
-| `phase_transition` | Keep all (milestone) |
-| `batch_complete` | Keep last 3 per phase |
-| `agent_complete` | Keep last 1 per phase |
+| Checkpoint Type     | Retention              |
+| ------------------- | ---------------------- |
+| `phase_transition`  | Keep all (milestone)   |
+| `batch_complete`    | Keep last 3 per phase  |
+| `agent_complete`    | Keep last 1 per phase  |
 | `conflict_resolved` | Keep all (audit trail) |
-| `user_interrupt` | Keep last 1 |
-| `manual` | Keep all |
+| `user_interrupt`    | Keep last 1            |
+| `manual`            | Keep all               |
 
 ### Cleanup Logic
 
@@ -283,34 +268,28 @@ def cleanup_old_checkpoints(issue_number, retention_policy):
 
 ## Configuration Options
 
-### In `.claude/checkpoint-config.json`:
+### In `.claude/checkpoint-config.yaml`:
 
-```json
-{
-  "checkpoint": {
-    "enabled": true,
-    "auto_checkpoint": true,
-    "checkpoint_triggers": {
-      "phase_transition": true,
-      "batch_complete": true,
-      "agent_complete": false,
-      "conflict_events": true
-    },
-    "retention": {
-      "phase_transition": -1,
-      "batch_complete": 3,
-      "agent_complete": 1,
-      "conflict_resolved": -1,
-      "user_interrupt": 1,
-      "manual": -1
-    },
-    "storage": {
-      "location": ".claude/crunch/{issue}/checkpoints",
-      "compress": false,
-      "max_size_mb": 50
-    }
-  }
-}
+```yaml
+checkpoint:
+  enabled: true
+  auto_checkpoint: true
+  checkpoint_triggers:
+    phase_transition: true
+    batch_complete: true
+    agent_complete: false
+    conflict_events: true
+  retention:
+    phase_transition: -1
+    batch_complete: 3
+    agent_complete: 1
+    conflict_resolved: -1
+    user_interrupt: 1
+    manual: -1
+  storage:
+    location: ".claude/crunch/{issue}/checkpoints"
+    compress: false
+    max_size_mb: 50
 ```
 
 ## Edge Cases
@@ -363,6 +342,7 @@ When external changes conflict with checkpoint:
 ### With Orchestrator
 
 Orchestrator manages checkpoints during coordination:
+
 - Creates checkpoint before each batch
 - Restores from checkpoint on retry
 - Includes checkpoint state in progress reports
@@ -370,6 +350,7 @@ Orchestrator manages checkpoints during coordination:
 ### With ACP
 
 ACP messages are checkpointed:
+
 - Pending messages saved for retry
 - Response messages preserved for recovery
 - Conflict state captured for resolution resume
@@ -377,6 +358,7 @@ ACP messages are checkpointed:
 ### With Knowledge Base
 
 Knowledge context checkpointed:
+
 - Injected entries recorded
 - Captured entries tracked
 - Prevents duplicate captures on resume

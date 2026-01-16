@@ -347,12 +347,12 @@ Before completing ENRICH, verify all DOD items meet autonomous validation requir
 3. **Verify health endpoints** - Services being modified must expose `/health`
 4. **Document verification commands** - Each DOD item needs explicit command/query
 
-| DOD Quality Check | Action if Failed |
-|-------------------|------------------|
-| Item is subjective ("works correctly") | Rewrite with specific assertion |
-| No verification method specified | Add command/query/metric check |
-| Requires human judgment | Convert to measurable criterion |
-| Missing health endpoint | Add health endpoint to implementation |
+| DOD Quality Check                      | Action if Failed                      |
+| -------------------------------------- | ------------------------------------- |
+| Item is subjective ("works correctly") | Rewrite with specific assertion       |
+| No verification method specified       | Add command/query/metric check        |
+| Requires human judgment                | Convert to measurable criterion       |
+| Missing health endpoint                | Add health endpoint to implementation |
 
 ### Incremental Milestone Planning
 
@@ -1602,7 +1602,7 @@ The crunch skill integrates with the knowledge management system to:
 Before starting investigation or specification:
 
 ```
-1. Check if .claude/knowledge/index.json exists
+1. Check if .claude/knowledge/index.yaml exists
    IF not: Skip injection (knowledge base empty)
 
 2. Generate context brief:
@@ -1731,7 +1731,7 @@ After each agent invocation:
   1. Record: agent, domain, phase, issue_number
   2. On issue completion (DONE):
      - Calculate success: reached DONE without major rework
-     - Update agent_metrics in index.json
+     - Update agent_metrics in index.yaml
 
 Metrics tracked:
   - total_invocations per agent
@@ -1855,7 +1855,7 @@ Before running in non-interactive mode, ensure:
 - [ ] CI platform is available:
   - MCP-based (GitHub/GitLab/Gitea): CI MCP server configured
   - Filebase: `.claude/ci-filebase/` directory initialized
-- [ ] Required labels exist (in CI platform or `labels.json` for Filebase)
+- [ ] Required labels exist (in CI platform or `labels.yaml` for Filebase)
 - [ ] E2E requirements met:
   - MCP-based: Observability MCPs configured (Prometheus, Loki) OR skip monitoring
   - Filebase: Docker installed and `/ci-filebase docker init` completed OR manual validation only

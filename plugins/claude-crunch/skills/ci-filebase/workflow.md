@@ -503,17 +503,17 @@ When `/crunch` detects `Filebase` as the CI platform in CLAUDE.md, it should use
 
 ### Operation Mapping
 
-| /crunch needs to... | MCP call (GitHub example) | Filebase equivalent |
-|---------------------|---------------------------|---------------------|
-| Fetch issue | `mcp__github__get_issue(owner, repo, issue_number)` | `/ci-filebase issue get {id}` |
-| Create issue | `mcp__github__create_issue(owner, repo, title, body, labels)` | `/ci-filebase issue create "{title}" --body "{body}" --labels {labels}` |
-| Update issue body | `mcp__github__update_issue(owner, repo, issue_number, body)` | `/ci-filebase issue update {id} --body "{body}"` |
-| Set labels | `mcp__github__set_issue_labels(owner, repo, issue_number, labels)` | `/ci-filebase issue label {id} {labels}` |
-| Close issue | `mcp__github__update_issue(owner, repo, issue_number, state: "closed")` | `/ci-filebase issue close {id}` |
-| Add comment | `mcp__github__create_issue_comment(owner, repo, issue_number, body)` | `/ci-filebase issue comment {id} "{body}"` |
-| List labels | `mcp__github__list_labels(owner, repo)` | `/ci-filebase labels` |
-| Create PR | `mcp__github__create_pull_request(...)` | `/ci-filebase pr create --title "..." --head "..." --base "..."` |
-| Merge PR | `mcp__github__merge_pull_request(...)` | `/ci-filebase pr merge {id}` |
+| /crunch needs to... | MCP call (GitHub example)                                               | Filebase equivalent                                                     |
+| ------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Fetch issue         | `mcp__github__get_issue(owner, repo, issue_number)`                     | `/ci-filebase issue get {id}`                                           |
+| Create issue        | `mcp__github__create_issue(owner, repo, title, body, labels)`           | `/ci-filebase issue create "{title}" --body "{body}" --labels {labels}` |
+| Update issue body   | `mcp__github__update_issue(owner, repo, issue_number, body)`            | `/ci-filebase issue update {id} --body "{body}"`                        |
+| Set labels          | `mcp__github__set_issue_labels(owner, repo, issue_number, labels)`      | `/ci-filebase issue label {id} {labels}`                                |
+| Close issue         | `mcp__github__update_issue(owner, repo, issue_number, state: "closed")` | `/ci-filebase issue close {id}`                                         |
+| Add comment         | `mcp__github__create_issue_comment(owner, repo, issue_number, body)`    | `/ci-filebase issue comment {id} "{body}"`                              |
+| List labels         | `mcp__github__list_labels(owner, repo)`                                 | `/ci-filebase labels`                                                   |
+| Create PR           | `mcp__github__create_pull_request(...)`                                 | `/ci-filebase pr create --title "..." --head "..." --base "..."`        |
+| Merge PR            | `mcp__github__merge_pull_request(...)`                                  | `/ci-filebase pr merge {id}`                                            |
 
 ### State Extraction
 
@@ -531,14 +531,14 @@ If no `state:` label exists, treat as INPUT phase.
 
 ## Error Handling
 
-| Condition | Error Message | Recovery |
-|-----------|---------------|----------|
-| Not initialized | "ci-filebase not initialized. Run `/ci-filebase init` first." | Run init |
-| Issue not found | "Issue #{id} not found" | Check ID |
-| PR not found | "PR #{id} not found" | Check ID |
-| File read error | "Error reading {path}: {error}" | Check permissions |
-| File write error | "Error writing {path}: {error}" | Check permissions |
-| Invalid JSON | "Corrupted file at {path}" | Manual fix or recreate |
+| Condition        | Error Message                                                 | Recovery               |
+| ---------------- | ------------------------------------------------------------- | ---------------------- |
+| Not initialized  | "ci-filebase not initialized. Run `/ci-filebase init` first." | Run init               |
+| Issue not found  | "Issue #{id} not found"                                       | Check ID               |
+| PR not found     | "PR #{id} not found"                                          | Check ID               |
+| File read error  | "Error reading {path}: {error}"                               | Check permissions      |
+| File write error | "Error writing {path}: {error}"                               | Check permissions      |
+| Invalid JSON     | "Corrupted file at {path}"                                    | Manual fix or recreate |
 
 ---
 
@@ -557,6 +557,7 @@ Generate with: `new Date().toISOString()` or equivalent.
 ## File Permissions
 
 Files should be created with standard permissions:
+
 - Directories: 755
 - Files: 644
 
@@ -906,21 +907,21 @@ E2E Phase (Filebase + Docker):
 
 For local Docker staging, remediation is simpler:
 
-| Action | When | Command |
-|--------|------|---------|
-| `restart_container` | Container issues | `/ci-filebase docker rebuild` |
-| `view_logs` | Any issue | `/ci-filebase docker logs --tail 100` |
-| `stop_start` | Stuck container | `/ci-filebase docker stop && /ci-filebase docker deploy staging` |
+| Action              | When             | Command                                                          |
+| ------------------- | ---------------- | ---------------------------------------------------------------- |
+| `restart_container` | Container issues | `/ci-filebase docker rebuild`                                    |
+| `view_logs`         | Any issue        | `/ci-filebase docker logs --tail 100`                            |
+| `stop_start`        | Stuck container  | `/ci-filebase docker stop && /ci-filebase docker deploy staging` |
 
 ### Operation Mapping (with Docker)
 
-| /crunch needs to... | MCP (GitHub) | Filebase | Filebase + Docker |
-|---------------------|--------------|----------|-------------------|
-| Run CI pipeline | Automatic | Manual | `/ci-filebase docker ci` |
-| Deploy to staging | Remote deploy | Manual | `/ci-filebase docker deploy staging` |
-| Check staging health | Observability MCP | Manual | `/ci-filebase docker health` |
-| View staging logs | Loki MCP | Manual | `/ci-filebase docker logs` |
-| Restart staging | kubectl/API | Manual | `/ci-filebase docker rebuild` |
+| /crunch needs to...  | MCP (GitHub)      | Filebase | Filebase + Docker                    |
+| -------------------- | ----------------- | -------- | ------------------------------------ |
+| Run CI pipeline      | Automatic         | Manual   | `/ci-filebase docker ci`             |
+| Deploy to staging    | Remote deploy     | Manual   | `/ci-filebase docker deploy staging` |
+| Check staging health | Observability MCP | Manual   | `/ci-filebase docker health`         |
+| View staging logs    | Loki MCP          | Manual   | `/ci-filebase docker logs`           |
+| Restart staging      | kubectl/API       | Manual   | `/ci-filebase docker rebuild`        |
 
 ---
 

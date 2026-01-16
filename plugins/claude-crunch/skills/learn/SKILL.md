@@ -15,22 +15,22 @@ Capture and store knowledge from the current session, issue, or explicit user in
 
 ### Parameters
 
-| Parameter | Short | Description |
-|-----------|-------|-------------|
-| `--issue` | `-i` | Issue number to capture from |
-| `--type` | `-t` | Knowledge type: `decision`, `resolution`, `pattern`, `feedback` |
-| `--from-review` | | Capture from most recent code review |
-| `--content` | `-c` | Explicit content to capture |
-| `--tags` | | Comma-separated tags |
+| Parameter       | Short | Description                                                     |
+| --------------- | ----- | --------------------------------------------------------------- |
+| `--issue`       | `-i`  | Issue number to capture from                                    |
+| `--type`        | `-t`  | Knowledge type: `decision`, `resolution`, `pattern`, `feedback` |
+| `--from-review` |       | Capture from most recent code review                            |
+| `--content`     | `-c`  | Explicit content to capture                                     |
+| `--tags`        |       | Comma-separated tags                                            |
 
 ### Invocation Modes
 
-| Mode | Example | Use Case |
-|------|---------|----------|
-| From issue | `/learn -i 42` | Capture resolution of completed issue |
-| From review | `/learn --from-review` | Capture patterns from code review |
-| Explicit | `/learn -t decision -c "Use PostgreSQL..."` | Manual decision capture |
-| Interactive | `/learn` | Guided capture wizard |
+| Mode        | Example                                     | Use Case                              |
+| ----------- | ------------------------------------------- | ------------------------------------- |
+| From issue  | `/learn -i 42`                              | Capture resolution of completed issue |
+| From review | `/learn --from-review`                      | Capture patterns from code review     |
+| Explicit    | `/learn -t decision -c "Use PostgreSQL..."` | Manual decision capture               |
+| Interactive | `/learn`                                    | Guided capture wizard                 |
 
 ## Knowledge Types
 
@@ -42,6 +42,7 @@ Architectural or technical decisions with rationale.
 **Required fields**: title, decision, rationale
 
 **Example**:
+
 ```
 /learn -t decision -c "Use event sourcing for audit log"
 ```
@@ -54,6 +55,7 @@ Issue resolution including root cause and solution.
 **Required fields**: issue_ref, problem, root_cause, solution
 
 **Example**:
+
 ```
 /learn -i 42
 ```
@@ -66,6 +68,7 @@ Reusable pattern or anti-pattern identified from experience.
 **Required fields**: name, type (pattern|anti-pattern), description
 
 **Example**:
+
 ```
 /learn -t pattern -c "Always use mutex for token operations" --tags auth,concurrency
 ```
@@ -78,6 +81,7 @@ Review feedback worth preserving.
 **Required fields**: finding, recommendation
 
 **Example**:
+
 ```
 /learn --from-review
 ```
@@ -141,6 +145,7 @@ Created: KE-pattern-20250114-c8d3
 ## Output
 
 After capture, the skill reports:
+
 - Knowledge entry ID created
 - Summary of what was captured
 - Related entries found and linked

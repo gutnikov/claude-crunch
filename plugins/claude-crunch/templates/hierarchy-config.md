@@ -204,23 +204,21 @@ Any tier can escalate directly to user when:
 
 ## Configuration Options
 
-### In `.claude/orchestration-config.json`:
+### In `.claude/orchestration-config.yaml`:
 
-```json
-{
-  "hierarchy": {
-    "orchestrator_threshold": 5,
-    "supervisor_approval_required": ["security", "breaking_change"],
-    "auto_escalate_on_conflict": true,
-    "max_debate_rounds": 3
-  },
-  "tier_overrides": {
-    "dev-python": {
-      "tier": "supervisor",
-      "reason": "Project lead is Python expert"
-    }
-  }
-}
+```yaml
+hierarchy:
+  orchestrator_threshold: 5
+  supervisor_approval_required:
+    - security
+    - breaking_change
+  auto_escalate_on_conflict: true
+  max_debate_rounds: 3
+
+tier_overrides:
+  dev-python:
+    tier: supervisor
+    reason: Project lead is Python expert
 ```
 
 ### Customization

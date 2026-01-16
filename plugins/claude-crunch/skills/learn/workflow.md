@@ -138,7 +138,7 @@ Where:
 ### Phase 4: Check Duplicates
 
 ```
-1. Load index from .claude/knowledge/index.json
+1. Load index from .claude/knowledge/index.yaml
 
 2. Find candidates of same type
 
@@ -158,9 +158,9 @@ Where:
    .claude/knowledge/{type}/
 
 2. Write entry file:
-   .claude/knowledge/{type}/{id}.json
+   .claude/knowledge/{type}/{id}.yaml
 
-3. Update index.json:
+3. Update index.yaml:
    - Add entry summary to entries[]
    - Update tag_index
    - Update issue_index (if issue ref)
@@ -342,13 +342,13 @@ After /review posts findings:
 
 ## Error Handling
 
-| Error | Handling |
-|-------|----------|
-| Knowledge directory missing | Create `.claude/knowledge/` structure |
-| Index file missing | Initialize empty index |
-| Duplicate entry detected | Report and skip (or merge if requested) |
-| Invalid entry schema | Report validation errors, don't store |
-| CI MCP unavailable | Fall back to manual input |
+| Error                       | Handling                                |
+| --------------------------- | --------------------------------------- |
+| Knowledge directory missing | Create `.claude/knowledge/` structure   |
+| Index file missing          | Initialize empty index                  |
+| Duplicate entry detected    | Report and skip (or merge if requested) |
+| Invalid entry schema        | Report validation errors, don't store   |
+| CI MCP unavailable          | Fall back to manual input               |
 
 ---
 

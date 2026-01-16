@@ -22,8 +22,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -187,13 +187,13 @@ if [ $(echo "$COVERAGE < 80" | bc) -eq 1 ]; then exit 1; fi
 
 ### Supported Formats
 
-| Format | File | Tools |
-|--------|------|-------|
-| LCOV | `lcov.info` | Jest, c8, nyc, genhtml |
-| Cobertura | `coverage.xml` | pytest-cov, JaCoCo, coverage.py |
-| JSON Summary | `coverage-summary.json` | Jest |
-| Go Coverage | `coverage.out` | go test |
-| Clover | `clover.xml` | PHPUnit |
+| Format       | File                    | Tools                           |
+| ------------ | ----------------------- | ------------------------------- |
+| LCOV         | `lcov.info`             | Jest, c8, nyc, genhtml          |
+| Cobertura    | `coverage.xml`          | pytest-cov, JaCoCo, coverage.py |
+| JSON Summary | `coverage-summary.json` | Jest                            |
+| Go Coverage  | `coverage.out`          | go test                         |
+| Clover       | `clover.xml`            | PHPUnit                         |
 
 ### Unified Format for /test-analyze
 
@@ -258,15 +258,16 @@ Add this section to your project's CLAUDE.md:
 
 ### Thresholds
 
-| Metric | Threshold | Enforcement |
-|--------|-----------|-------------|
-| Line Coverage | 80% | CI blocks merge |
-| Branch Coverage | 75% | CI warns |
-| Critical Paths | 100% | qa-engineer blocks review |
+| Metric          | Threshold | Enforcement               |
+| --------------- | --------- | ------------------------- |
+| Line Coverage   | 80%       | CI blocks merge           |
+| Branch Coverage | 75%       | CI warns                  |
+| Critical Paths  | 100%      | qa-engineer blocks review |
 
 ### Excluded Paths
 
 Paths excluded from coverage requirements:
+
 - `**/generated/**`
 - `**/migrations/**`
 - `**/*.d.ts`
@@ -275,21 +276,21 @@ Paths excluded from coverage requirements:
 
 ### Per-Module Overrides
 
-| Module | Line Threshold | Rationale |
-|--------|----------------|-----------|
-| `src/core/` | 90% | Critical business logic |
-| `src/utils/` | 85% | Widely used utilities |
-| `src/config/` | 60% | Configuration code |
+| Module        | Line Threshold | Rationale               |
+| ------------- | -------------- | ----------------------- |
+| `src/core/`   | 90%            | Critical business logic |
+| `src/utils/`  | 85%            | Widely used utilities   |
+| `src/config/` | 60%            | Configuration code      |
 ```
 
 ## Enforcement Points
 
-| Point | Tool | Action on Failure |
-|-------|------|-------------------|
-| PR/MR creation | CI pipeline | Block merge |
-| TEST-VERIFICATION | qa-engineer | Block code review |
-| Code Review | test-quality-reviewer | Flag with confidence score |
-| Pre-merge | CI gate | Final verification |
+| Point             | Tool                  | Action on Failure          |
+| ----------------- | --------------------- | -------------------------- |
+| PR/MR creation    | CI pipeline           | Block merge                |
+| TEST-VERIFICATION | qa-engineer           | Block code review          |
+| Code Review       | test-quality-reviewer | Flag with confidence score |
+| Pre-merge         | CI gate               | Final verification         |
 
 ## Flaky Test Detection
 
@@ -311,6 +312,7 @@ test:
 ```
 
 The `/test-analyze --flaky` command can analyze these results to identify:
+
 - Tests that pass and fail across runs
 - Tests with high duration variance
 - Tests that require retries
