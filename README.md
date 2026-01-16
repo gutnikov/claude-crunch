@@ -1,8 +1,49 @@
-# claude-crunch
+# claude-crunch-marketplace
 
-A Claude Code plugin providing development workflow automation with structured issue processing, multi-agent orchestration, and project initialization.
+A Claude Code plugin marketplace containing development workflow automation tools.
 
-## Features
+## Available Plugins
+
+| Plugin | Description | Category |
+|--------|-------------|----------|
+| [claude-crunch](#claude-crunch) | Development workflow automation with multi-agent orchestration | development |
+
+## Installation
+
+### Add the Marketplace
+
+```bash
+# Add this repository as a marketplace
+/plugin marketplace add owner/claude-crunch-marketplace
+```
+
+### Install Plugins
+
+```bash
+# Install claude-crunch from this marketplace
+/plugin install claude-crunch@claude-crunch-marketplace
+
+# Or with scope
+/plugin install claude-crunch@claude-crunch-marketplace --scope user
+```
+
+### Development (test locally)
+
+```bash
+# Test the entire marketplace
+claude --plugin-dir /path/to/claude-crunch-marketplace
+
+# Or test a specific plugin
+claude --plugin-dir /path/to/claude-crunch-marketplace/plugins/claude-crunch
+```
+
+---
+
+## claude-crunch
+
+Development workflow automation with structured issue processing, multi-agent orchestration, and project initialization.
+
+### Features
 
 - **16 Specialized Agents** - Domain-specific agents with hierarchical coordination for architecture, security, DevOps, and language-specific development
 - **Multi-Agent Orchestration** - Automatic coordination for complex, multi-domain issues with conflict resolution and adaptive routing
@@ -11,42 +52,11 @@ A Claude Code plugin providing development workflow automation with structured i
 - **Code Review (`/review`)** - Parallel multi-agent code review with 6 specialized reviewers
 - **Templates** - Predefined sections for building comprehensive project documentation
 
-## Installation
-
-### Development (test locally)
-
-```bash
-claude --plugin-dir /path/to/claude-crunch
-```
-
-### Via Marketplace
-
-```bash
-# Add this repository as a marketplace
-/plugin marketplace add owner/claude-crunch
-
-# Install the plugin
-/plugin install claude-crunch
-```
-
-### Scoped Installation
-
-```bash
-# User scope (all your projects)
-claude plugin install claude-crunch --scope user
-
-# Project scope (shared via git)
-claude plugin install claude-crunch --scope project
-
-# Local scope (gitignored)
-claude plugin install claude-crunch --scope local
-```
-
-## Usage
+### Usage
 
 Commands are namespaced with `claude-crunch:` when installed as a plugin.
 
-### Initialize a Project
+#### Initialize a Project
 
 ```
 /claude-crunch:init
@@ -67,7 +77,7 @@ Interactive wizard that:
 
 Progress is saved to `.claude/init-progress.txt` - resume anytime by running `/init` again.
 
-### Process Issues
+#### Process Issues
 
 ```
 /claude-crunch:crunch 42
@@ -76,7 +86,7 @@ Progress is saved to `.claude/init-progress.txt` - resume anytime by running `/i
 Moves issue #42 through workflow states:
 
 ```
-INPUT → BACKLOG → ENRICH → READY → IMPLEMENTING → VALIDATION → DOCS → READY-TO-MERGE → DONE
+INPUT → BACKLOG → ENRICH → READY → IMPLEMENTING → E2E → DOCS → READY-TO-MERGE → DONE
 ```
 
 Features:
@@ -86,7 +96,7 @@ Features:
 - Automatic branch creation and PR workflow
 - Issue body updates with progress tracking
 
-### File-based CI with Docker
+#### File-based CI with Docker
 
 For projects without access to hosted CI platforms, use Filebase with local Docker:
 
@@ -100,9 +110,9 @@ This provides:
 - **Local issue/PR tracking** - JSON files in `.claude/ci-filebase/`
 - **CI pipeline simulation** - Run lint, test, build locally
 - **Local Docker staging** - Deploy and validate in containers
-- **Full VALIDATION support** - Complete workflow without external services
+- **Full E2E support** - Complete workflow without external services
 
-#### Quick Start (Filebase + Docker)
+##### Quick Start (Filebase + Docker)
 
 ```bash
 # Initialize file-based CI
@@ -124,7 +134,7 @@ This provides:
 /ci-filebase docker stop
 ```
 
-#### Docker CI Commands
+##### Docker CI Commands
 
 | Command                 | Description                               |
 | ----------------------- | ----------------------------------------- |
@@ -136,9 +146,9 @@ This provides:
 | `docker stop`           | Stop local staging environment            |
 | `docker rebuild`        | Rebuild and restart staging               |
 
-## Agents
+### Agents
 
-### Agent Hierarchy
+#### Agent Hierarchy
 
 Agents are organized in a 4-tier hierarchy:
 
@@ -149,7 +159,7 @@ Agents are organized in a 4-tier hierarchy:
 | 3    | Specialists  | `dev-*`, `reviewer`, `qa-engineer`, `techwriter`, `knowledge-manager`            |
 | 4    | Responders   | `incident-responder`, `log-analyst`, `code-health-analyst`, `dependency-manager` |
 
-### Available Agents
+#### Available Agents
 
 | Agent                 | Purpose                                                                        |
 | --------------------- | ------------------------------------------------------------------------------ |
@@ -170,11 +180,11 @@ Agents are organized in a 4-tier hierarchy:
 | `dependency-manager`  | CVE scanning, dependency updates                                               |
 | `incident-responder`  | Staging validation, anomaly diagnosis                                          |
 
-### Customizing Agents
+#### Customizing Agents
 
 The agents included in this plugin are **general-purpose templates**. For best results, customize them for your specific project.
 
-**Agent files location:** `agents/*.md` in the plugin directory
+**Agent files location:** `plugins/claude-crunch/agents/*.md`
 
 **What to customize:**
 
@@ -186,11 +196,11 @@ The agents included in this plugin are **general-purpose templates**. For best r
 
 **Example:** If your Python project uses FastAPI + SQLAlchemy + Pydantic, edit `agents/dev-python.md` to reference these specifically, including your project's patterns for models, schemas, and dependency injection.
 
-## Templates
+### Templates
 
-Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
+Templates in `plugins/claude-crunch/templates/` are used by `/init` to generate `CLAUDE.md`:
 
-### Core Templates
+#### Core Templates
 
 | Template                 | Content                                    |
 | ------------------------ | ------------------------------------------ |
@@ -199,6 +209,8 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 | `3-tdd.md`               | Test-driven development requirements       |
 | `4-observability.md`     | Logging and metrics standards              |
 | `5-workflow.md`          | Task types and state flow                  |
+| `5-e2e-testability.md`   | Autonomous E2E validation requirements     |
+| `5a-incremental-development.md` | Incremental milestone development    |
 | `6-ci.md`                | CI/CD platform configuration               |
 | `6-ci-github.md`         | GitHub MCP reference                       |
 | `6-ci-gitlab.md`         | GitLab MCP reference                       |
@@ -211,7 +223,7 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 | `9-deployment.md`        | Staging and production deployment          |
 | `99-setup-checklist.md`  | Setup verification checklist               |
 
-### Orchestration Templates
+#### Orchestration Templates
 
 | Template                      | Content                                      |
 | ----------------------------- | -------------------------------------------- |
@@ -226,7 +238,7 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
 | `execution-graph.md`          | Parallel execution dependency graphs         |
 | `checkpoint-config.md`        | Workflow checkpoint and recovery             |
 
-## Requirements
+### Requirements
 
 - Claude Code CLI
 - For full functionality:
@@ -234,30 +246,59 @@ Templates in `templates/` are used by `/init` to generate `CLAUDE.md`:
   - CI MCP server (GitHub/GitLab/Gitea) OR Filebase for local-only workflows
   - Docker and Docker Compose (for Filebase local staging)
 
-## Plugin Structure
+---
+
+## Marketplace Structure
 
 ```
-claude-crunch/
+claude-crunch-marketplace/
 ├── .claude-plugin/
-│   └── plugin.json      # Plugin manifest
-├── agents/              # 16 specialized agent definitions
-│   ├── orchestrator.md  # Multi-agent coordinator
-│   ├── system-architect.md
-│   ├── security-analyst.md  # Has veto authority
-│   └── ...
-├── skills/
-│   ├── init/           # Project initialization skill
-│   ├── crunch/         # Issue processing skill
-│   ├── review/         # Multi-agent code review skill
-│   ├── orchestrate/    # Multi-agent orchestration skill
-│   ├── patrol/         # Continuous monitoring skill
-│   ├── learn/          # Knowledge capture skill
-│   ├── knowledge/      # Knowledge query skill
-│   ├── test-analyze/   # Test quality analysis skill
-│   ├── analyze/        # Pattern analysis skill
-│   └── ci-filebase/    # File-based CI for local workflows
-└── templates/          # CLAUDE.md section and orchestration templates
+│   └── marketplace.json      # Marketplace catalog
+├── plugins/
+│   └── claude-crunch/        # First plugin
+│       ├── .claude-plugin/
+│       │   └── plugin.json   # Plugin manifest
+│       ├── agents/           # 16 specialized agents
+│       ├── skills/           # Workflow skills
+│       └── templates/        # CLAUDE.md templates
+├── LICENSE
+└── README.md
 ```
+
+## Adding New Plugins
+
+To add a new plugin to this marketplace:
+
+1. Create a new directory under `plugins/`:
+   ```
+   plugins/my-new-plugin/
+   ```
+
+2. Add a plugin manifest:
+   ```json
+   // plugins/my-new-plugin/.claude-plugin/plugin.json
+   {
+     "name": "my-new-plugin",
+     "version": "1.0.0",
+     "description": "What this plugin does",
+     "agents": "./agents/",
+     "skills": "./skills/"
+   }
+   ```
+
+3. Add plugin content (agents, skills, etc.)
+
+4. Register in marketplace catalog:
+   ```json
+   // .claude-plugin/marketplace.json - add to plugins array
+   {
+     "name": "my-new-plugin",
+     "description": "What this plugin does",
+     "version": "1.0.0",
+     "source": "./plugins/my-new-plugin",
+     "category": "development"
+   }
+   ```
 
 ## License
 

@@ -1,0 +1,20 @@
+{
+  "name": "claude-crunch",
+  "version": "1.0.0",
+  "description": "Development workflow automation with structured issue processing, multi-agent orchestration, and project initialization",
+  "author": {
+    "name": "agutnikov"
+  },
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "agents",
+    "orchestration",
+    "tdd",
+    "code-review",
+    "issue-tracking",
+    "ci-cd"
+  ],
+  "agents": "./agents/",
+  "skills": "./skills/"
+}
